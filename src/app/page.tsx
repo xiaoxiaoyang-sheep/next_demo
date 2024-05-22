@@ -3,14 +3,13 @@
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
 import { Textarea } from "@/components/Textarea";
-import { useEffect } from "react";
-import { trpcClient} from "@/utils/api"
+import { trpcClient, trpcClientReact} from "@/utils/api"
 
 
 export default function Home() {
-  useEffect(() => {
-    trpcClient.hello.query();
-  }, [])
+  const {data, isLoading, isError} = trpcClientReact.hello.useQuery(void 0, {
+    refetchOnWindowFocus: false, // 打开页面重新加载数据
+  });
 
 	return (
 		<div className="h-screen flex justify-center items-center">
@@ -20,6 +19,9 @@ export default function Home() {
 				<Textarea name="descript" placeholder="Descpipt" />
 				<Button type="submit">Submit</Button>
 			</form>
+      {data?.hello}
+      {isLoading && "loading..."}
+      {isError && "error..."}
 		</div>
 	);
 }

@@ -1,5 +1,6 @@
 import { getServerSession } from "@/server/auth";
 import { TRPCError, initTRPC } from "@trpc/server";
+import { createCallerFactory } from "@trpc/server/unstable-core-do-not-import";
 import next from "next";
 
 export async function createTRPCContext() {
@@ -39,7 +40,7 @@ const loggedProcedure = procedure.use(middleware);
 const protectedProcedure = procedure.use(checkLoginMiddleware);
 
 export const testRouter = router({
-	hello: loggedProcedure.query(async ({ ctx }) => {
+	hello: loggedProcedure.query(({ ctx }) => {
 		return {
 			hello: "world!",
 		};
@@ -47,3 +48,5 @@ export const testRouter = router({
 });
 
 export type TestRouter = typeof testRouter;
+
+export const serverCaller = createCallerFactory()(testRouter);
