@@ -1,9 +1,17 @@
+"use client"
+
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
 import { Textarea } from "@/components/Textarea";
-import { SessionProvider, UserInfo } from "./UserInfo";
+import { useEffect } from "react";
+import { trpcClient} from "@/utils/api"
 
-export default async function Home() {
+
+export default function Home() {
+  useEffect(() => {
+    trpcClient.hello.query();
+  }, [])
+
 	return (
 		<div className="h-screen flex justify-center items-center">
 			<form action="" className="w-full max-w-md flex flex-col gap-4">
@@ -12,9 +20,6 @@ export default async function Home() {
 				<Textarea name="descript" placeholder="Descpipt" />
 				<Button type="submit">Submit</Button>
 			</form>
-			<SessionProvider>
-				<UserInfo />
-			</SessionProvider>
 		</div>
 	);
 }
