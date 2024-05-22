@@ -4,6 +4,7 @@ import {
 	text,
 	primaryKey,
 	integer,
+	date,
   } from "drizzle-orm/pg-core"
   import postgres from "postgres"
   import { drizzle } from "drizzle-orm/postgres-js"
@@ -18,6 +19,7 @@ import {
 	email: text("email").notNull(),
 	emailVerified: timestamp("emailVerified", { mode: "date" }),
 	image: text("image"),
+	createdAt: date("createdAt").defaultNow(),
   })
    
   export const accounts = pgTable(
