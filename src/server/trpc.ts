@@ -1,6 +1,8 @@
 import { getServerSession } from "@/server/auth";
 import { TRPCError, initTRPC } from "@trpc/server";
+
 import { Session } from "next-auth";
+import { appRouter } from "./router";
 
 const t = initTRPC.context().create();
 
@@ -41,3 +43,4 @@ export const protectedProcedure = withLoggerProcedure
 	});
 
 export { router };
+

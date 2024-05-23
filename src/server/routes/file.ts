@@ -4,12 +4,16 @@ import {
 	S3Client,
 	PutObjectCommand,
 	PutObjectCommandInput,
+	GetObjectCommand,
+	GetObjectCommandInput,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { v4 as uuid } from "uuid";
 import { db } from "../db/db";
 import { files } from "../db/schema";
 import { desc } from "drizzle-orm";
+import { serverCaller } from "../router";
+import { escape } from "querystring";
 
 const bucket = "image-saas-1317906180";
 const apiEndpoint = "https://cos.ap-nanjing.myqcloud.com";
@@ -59,6 +63,35 @@ export const fileRoutes = router({
 			};
 		}),
 
+	createDownloadPresignedUrl: protectedProcedure
+		.input(
+			z.object({
+				key: z.string(),
+			})
+		)
+		.query(async ({ input }) => {
+			const params: GetObjectCommandInput = {
+				Bucket: bucket,
+				Key: input.key,
+			};
+
+			const s3Client = new S3Client({
+				endpoint: apiEndpoint,
+				region: region,
+				credentials: {
+					accessKeyId: COS_APP_ID,
+					secretAccessKey: COS_APP_SECRET,
+				},
+			});
+
+			const command = new GetObjectCommand(params);
+			const url = await getSignedUrl(s3Client, command, {
+				expiresIn: 60,
+			});
+
+			return url;
+		}),
+
 	saveFile: protectedProcedure
 		.input(
 			z.object({
@@ -91,6 +124,13 @@ export const fileRoutes = router({
 			orderBy: [desc(files.createdAt)],
 		});
 
+        await Promise.all(result.map(async (file) => {
+			const url = await serverCaller({}).file.createDownloadPresignedUrl({
+				key: decodeURIComponent(file.path)
+			});
+			file.url = url;
+		}))
+		
 		return result;
 	}),
 });
