@@ -6,13 +6,14 @@ import type { UploadSuccessCallback } from "@uppy/core";
 import AWSS3 from "@uppy/aws-s3";
 import { useEffect, useState } from "react";
 import { useUppyState } from "./useUppyState";
-import { Button } from "@/components/Button";
+import { Button } from "@/components/ui/Button";
 import { trpcClientReact, trpcPureClient } from "@/utils/api";
 import { UploadButton } from "@/components/feature/UploadButton";
 import { Dropzone } from "@/components/feature/Dropzone";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { usePasteFile } from "@/hooks/usePasteFile";
+import { UploadPreview } from "@/components/feature/UploadPreview";
 
 export default function Home() {
 	const [uppy] = useState(() => {
@@ -30,9 +31,6 @@ export default function Home() {
 		});
 		return uppy;
 	});
-
-	const files = useUppyState(uppy, (s) => Object.values(s.files));
-	const progress = useUppyState(uppy, (s) => s.totalProgress);
 
 	useEffect(() => {
 		const handler: UploadSuccessCallback<{}> = (file, resp) => {
@@ -117,8 +115,7 @@ export default function Home() {
 					</div>
 				)}
 			</Dropzone>
-
-			<div>{progress}</div>
+			<UploadPreview uppy={uppy}></UploadPreview>
 		</div>
 	);
 }

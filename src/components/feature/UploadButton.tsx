@@ -1,6 +1,6 @@
 import Uppy from "@uppy/core";
 import { Plus } from "lucide-react";
-import { Button } from "../Button";
+import { Button } from "@/components/ui/Button";
 import { useRef } from "react";
 
 export function UploadButton({ uppy }: { uppy: Uppy }) {
