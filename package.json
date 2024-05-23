@@ -2,6 +2,9 @@
   "name": "image-saas",
   "version": "0.1.0",
   "private": true,
+  "author": {
+    "name": "Yanko"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -11,11 +14,15 @@
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.1.0",
+    "@aws-sdk/client-s3": "^3.577.0",
+    "@aws-sdk/s3-request-presigner": "^3.577.0",
     "@radix-ui/react-slot": "^1.0.2",
     "@tanstack/react-query": "^5.37.1",
     "@trpc/client": "11.0.0-rc.374",
     "@trpc/react-query": "11.0.0-rc.374",
     "@trpc/server": "11.0.0-rc.374",
+    "@uppy/aws-s3": "^3.6.2",
+    "@uppy/core": "^3.11.3",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.30.10",
@@ -28,12 +35,14 @@
     "react-dom": "^18",
     "tailwind-merge": "^2.3.0",
     "tailwindcss-animate": "^1.0.7",
+    "use-sync-external-store": "^1.2.2",
     "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@types/use-sync-external-store": "^0.0.6",
     "drizzle-kit": "^0.21.2",
     "eslint": "^8",
     "eslint-config-next": "14.2.3",
