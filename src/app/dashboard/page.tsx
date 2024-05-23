@@ -7,7 +7,9 @@ import AWSS3 from "@uppy/aws-s3";
 import { useEffect, useState } from "react";
 import { useUppyState } from "./useUppyState";
 import { Button } from "@/components/Button";
-import { trpcPureClient } from "@/utils/api";
+import { trpcClientReact, trpcPureClient } from "@/utils/api";
+import { UploadButton } from "@/components/feature/UploadButton";
+import Image from "next/image";
 
 export default function Home() {
 	const [uppy] = useState(() => {
@@ -46,25 +48,34 @@ export default function Home() {
 		};
 	}, [uppy]);
 
+	const { data: fileList, isPending } =
+		trpcClientReact.file.listFiles.useQuery();
+
 	return (
-		<div className="h-screen flex justify-center items-center">
-			<input
-				type="file"
-				onChange={(e) => {
-					if (e.target.files) {
-						Array.from(e.target.files).forEach((file) => {
-							uppy.addFile({
-								data: file,
-							});
-						});
-					}
-				}}
-				multiple
-			></input>
-			{files.map((file) => {
-				const url = URL.createObjectURL(file.data);
-				return <img src={url} key={file.id}></img>;
-			})}
+		<div className="container mx-auto">
+			<div>
+				<UploadButton uppy={uppy}></UploadButton>
+			</div>
+			{isPending && <div>Loading</div>}
+			<div className=" flex flex-wrap gap-4">
+				{fileList?.map((file) => {
+					const isImage = file.contentType.startsWith("image");
+					return (
+						<div className=" w-56 h-56 flex justify-center items-center border">
+							{isImage ? (
+								<img src={file.url} alt={file.name}></img>
+							) : (
+								<Image
+									src="/unknown-file-types.png"
+									alt="unknow file type"
+									width={100}
+									height={100}
+								></Image>
+							)}
+						</div>
+					);
+				})}
+			</div>
 			<Button
 				onClick={() => {
 					uppy.upload();
