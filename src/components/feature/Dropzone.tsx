@@ -1,18 +1,20 @@
 import Uppy from "@uppy/core";
-import { ReactNode, useRef, useState } from "react";
+import { HTMLAttributes, ReactNode, useEffect, useRef, useState } from "react";
 
 export function Dropzone({
 	uppy,
 	children,
+	...divProps
 }: {
 	uppy: Uppy;
 	children: ReactNode | ((draging: boolean) => ReactNode);
-}) {
+} & Omit<HTMLAttributes<HTMLDivElement>, "children">) {
 	const [draging, setDraging] = useState<boolean>(false);
 	const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 	return (
-		<div 
+		<div
+			{...divProps}
 			onDragEnter={(e) => {
 				e.preventDefault();
 				setDraging(true);
@@ -34,18 +36,18 @@ export function Dropzone({
 					timerRef.current = null;
 				}
 			}}
-            onDrag={(e) => {
-                e.preventDefault();
-                const files = e.dataTransfer.files;
-                Array.from(files).forEach((file) => {
-                    uppy.addFile({
-                        data: file
-                    })
-                })
-                setDraging(false);
-            }}
+			onDrop={(e) => {
+				e.preventDefault();
+				const files = e.dataTransfer.files;
+				Array.from(files).forEach((file) => {
+					uppy.addFile({
+						data: file,
+					});
+				});
+				setDraging(false);
+			}}
 		>
-            {typeof children === "function" ? children(draging) : children}
-        </div>
+			{typeof children === "function" ? children(draging) : children}
+		</div>
 	);
 }
