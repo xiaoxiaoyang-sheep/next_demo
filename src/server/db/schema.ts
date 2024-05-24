@@ -7,6 +7,7 @@ import {
 	date,
 	uuid,
 	varchar,
+	index,
 } from "drizzle-orm/pg-core";
 import postgres from "postgres";
 import { drizzle } from "drizzle-orm/postgres-js";
@@ -72,13 +73,15 @@ export const files = pgTable("files", {
 	id: uuid("id").notNull().primaryKey(),
 	name: varchar("name", {length: 100}).notNull(),
 	type: varchar("type", {length: 100}).notNull(),
-	createdAt: timestamp("craeted_at", {mode: "date"}).defaultNow(),
+	createdAt: timestamp("created_at", {mode: "date"}).defaultNow(),
 	deletedAt: timestamp("deleted_at", {mode: "date"}),
 	path: varchar("path", { length: 1024 }).notNull(),
     url: varchar("url", { length: 1024 }).notNull(),
 	userId: text("user_id").notNull(),
 	contentType: varchar("content_type", { length: 100 }).notNull(),
-});
+}, (table) => ({
+	cursorIdx: index("cursor_idx").on(table.id, table.createdAt)
+}));
 
 export const photosRelations = relations(files, ({one}) => ({
 	photos: one(users, {fields: [files.userId], references: [users.id]})

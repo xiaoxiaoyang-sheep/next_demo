@@ -5,18 +5,36 @@ import Uppy, { UploadCallback, UploadSuccessCallback } from "@uppy/core";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { LocalFileItem, RemoteFileItem } from "./FileItem";
+import { inferRouterOutputs } from "@trpc/server";
+import { AppRouter } from "@/server/router";
+import { Button } from "../ui/Button";
+
+type FileResult = inferRouterOutputs<AppRouter>["file"]["listFiles"];
 
 export function FileList({ uppy }: { uppy: Uppy }) {
+	const {
+		data: infinityQueryData,
+		isPending,
+		fetchNextPage,
+	} = trpcClientReact.file.infinityQueryFiles.useInfiniteQuery(
+		{
+			limit: 3,
+		},
+		{
+			getNextPageParam: (resp) => resp.nextCursor,
+		}
+	);
 
-    const { data: fileList, isPending } =
-		trpcClientReact.file.listFiles.useQuery();
+	const fileList = infinityQueryData
+		? infinityQueryData.pages.reduce((result, page) => {
+				return [...result, ...page.items];
+		  }, [] as FileResult)
+		: [];
 
 	const utils = trpcClientReact.useUtils();
 
 	const [uploadingFileIDs, setUploadingFileIDs] = useState<string[]>([]);
 	const uppyFiles = useUppyState(uppy, (s) => s.files);
-
-	
 
 	useEffect(() => {
 		const handler: UploadSuccessCallback<{}> = (file, resp) => {
@@ -74,12 +92,7 @@ export function FileList({ uppy }: { uppy: Uppy }) {
 	return (
 		<>
 			{isPending && <div>Loading</div>}
-			<div
-				className={cn(
-					"flex flex-wrap gap-4 relative",
-				)}
-			>
-				
+			<div className={cn("flex flex-wrap gap-4 relative")}>
 				{uploadingFileIDs.length > 0 &&
 					uploadingFileIDs.map((id) => {
 						const file = uppyFiles[id];
@@ -88,17 +101,28 @@ export function FileList({ uppy }: { uppy: Uppy }) {
 								key={file.id}
 								className="w-56 h-56 flex justify-center items-center border border-red-500"
 							>
-								<LocalFileItem file={file.data as File}></LocalFileItem>
+								<LocalFileItem
+									file={file.data as File}
+								></LocalFileItem>
 							</div>
 						);
 					})}
 				{fileList?.map((file) => {
 					return (
-						<div className=" w-56 h-56 flex justify-center items-center border">
-							<RemoteFileItem contentType={file.contentType} url={file.url} name={file.name}></RemoteFileItem>
+						<div
+							key={file.id}
+							className=" w-56 h-56 flex justify-center items-center border"
+						>
+							<RemoteFileItem
+								contentType={file.contentType}
+								url={file.url}
+								name={file.name}
+							></RemoteFileItem>
 						</div>
 					);
 				})}
+
+				<Button onClick={() => fetchNextPage()}>Load Next Page</Button>
 			</div>
 		</>
 	);

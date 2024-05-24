@@ -11,7 +11,7 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { v4 as uuid } from "uuid";
 import { db } from "../db/db";
 import { files } from "../db/schema";
-import { desc } from "drizzle-orm";
+import { desc, sql } from "drizzle-orm";
 import { serverCaller } from "../router";
 import { escape } from "querystring";
 
@@ -124,13 +124,66 @@ export const fileRoutes = router({
 			orderBy: [desc(files.createdAt)],
 		});
 
-        await Promise.all(result.map(async (file) => {
-			const url = await serverCaller({}).file.createDownloadPresignedUrl({
-				key: decodeURIComponent(file.path)
-			});
-			file.url = url;
-		}))
-		
+		await Promise.all(
+			result.map(async (file) => {
+				const url = await serverCaller(
+					{}
+				).file.createDownloadPresignedUrl({
+					key: decodeURIComponent(file.path),
+				});
+				file.url = url;
+			})
+		);
+
 		return result;
 	}),
+
+	infinityQueryFiles: protectedProcedure
+		.input(
+			z.object({
+				cursor: z
+					.object({
+						id: z.string(),
+						createdAt: z.string(),
+					})
+					.optional(),
+				limit: z.number().default(10),
+			})
+		)
+		.query(async ({ input }) => {
+			const { cursor, limit } = input;
+        
+			const result = await db
+				.select()
+				.from(files)
+				.limit(limit)
+				.where(
+					cursor
+						? sql`("files"."created_at", "files"."id") < (${new Date(
+								cursor.createdAt
+						  ).toISOString()}, ${cursor.id})`
+						: undefined
+				)
+				.orderBy(desc(files.createdAt));
+
+            await Promise.all(result.map(async (file) => {
+				const url = await serverCaller(
+					{}
+				).file.createDownloadPresignedUrl({
+					key: decodeURIComponent(file.path),
+				});
+				file.url = url;
+			}))
+
+			return {
+				items: result,
+				nextCursor:
+					result.length > 0
+						? {
+								createdAt: result[result.length - 1].createdAt!,
+								id: result[result.length - 1].id,
+						  }
+						: null,
+			};
+		}),
 });
