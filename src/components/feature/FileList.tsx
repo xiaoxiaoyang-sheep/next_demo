@@ -9,10 +9,17 @@ import { inferRouterOutputs } from "@trpc/server";
 import { AppRouter } from "@/server/router";
 import { Button } from "../ui/Button";
 import { ScrollArea } from "../ui/ScrollArea";
+import { FilesOrderByColumn } from "@/server/routes/file";
 
 type FileResult = inferRouterOutputs<AppRouter>["file"]["listFiles"];
 
-export function FileList({ uppy }: { uppy: Uppy }) {
+export function FileList({
+	uppy,
+	orderBy,
+}: {
+	uppy: Uppy;
+	orderBy: FilesOrderByColumn;
+}) {
 	const {
 		data: infinityQueryData,
 		isPending,
@@ -20,6 +27,7 @@ export function FileList({ uppy }: { uppy: Uppy }) {
 	} = trpcClientReact.file.infinityQueryFiles.useInfiniteQuery(
 		{
 			limit: 10,
+			orderBy,
 		},
 		{
 			getNextPageParam: (resp) => resp.nextCursor,
@@ -56,24 +64,27 @@ export function FileList({ uppy }: { uppy: Uppy }) {
 							);
 						resp.url = presignedUrl;
 
-						utils.file.infinityQueryFiles.setInfiniteData({limit: 10}, (prev) => {
-							if (!prev) {
-								return prev;
-							}
+						utils.file.infinityQueryFiles.setInfiniteData(
+							{ limit: 10 },
+							(prev) => {
+								if (!prev) {
+									return prev;
+								}
 
-							return {
-                                ...prev,
-                                pages: prev.pages.map((page, index) => {
-                                    if(index === 0) {
-                                        return {
-                                            ...page,
-                                            items: [resp, ...page.items]
-                                        }
-                                    }
-                                    return page
-                                })
-                            }
-						});
+								return {
+									...prev,
+									pages: prev.pages.map((page, index) => {
+										if (index === 0) {
+											return {
+												...page,
+												items: [resp, ...page.items],
+											};
+										}
+										return page;
+									}),
+								};
+							}
+						);
 					});
 			}
 		};
@@ -100,35 +111,41 @@ export function FileList({ uppy }: { uppy: Uppy }) {
 		};
 	}, [uppy, utils]);
 
+	// ----------------------> intersection
 
-    // ----------------------> intersection
+	const buttomRef = useRef<HTMLDivElement>(null);
 
-    const buttomRef = useRef<HTMLDivElement>(null);
+	useEffect(() => {
+		if (buttomRef.current) {
+			const observer = new IntersectionObserver(
+				(e) => {
+					if (e[0].intersectionRatio > 0.1) {
+						fetchNextPage();
+					}
+				},
+				{
+					threshold: 0.1,
+				}
+			);
 
-    useEffect(() => {
-        if(buttomRef.current) {
-            const observer = new IntersectionObserver((e) => {
-                if(e[0].intersectionRatio > 0.1) {
-                    fetchNextPage();
-                }
-            }, {
-                threshold: 0.1
-            })
+			observer.observe(buttomRef.current);
+			const element = buttomRef.current;
 
-            observer.observe(buttomRef.current);
-            const element = buttomRef.current
-
-            return () => {
-                observer.unobserve(element);
-                observer.disconnect();
-            }
-        }
-    }, [fetchNextPage])
+			return () => {
+				observer.unobserve(element);
+				observer.disconnect();
+			};
+		}
+	}, [fetchNextPage]);
 
 	return (
 		<ScrollArea className=" h-full">
 			{isPending && <div>Loading</div>}
-			<div className={cn("flex flex-wrap justify-center gap-4 relative container")}>
+			<div
+				className={cn(
+					"flex flex-wrap justify-center gap-4 relative container"
+				)}
+			>
 				{uploadingFileIDs.length > 0 &&
 					uploadingFileIDs.map((id) => {
 						const file = uppyFiles[id];
@@ -158,9 +175,11 @@ export function FileList({ uppy }: { uppy: Uppy }) {
 					);
 				})}
 			</div>
-            <div className=" flex justify-center p-8" ref={buttomRef}>
-            <Button variant="ghost" onClick={() => fetchNextPage()}>Load Next Page</Button>
-            </div>
+			<div className=" flex justify-center p-8" ref={buttomRef}>
+				<Button variant="ghost" onClick={() => fetchNextPage()}>
+					Load Next Page
+				</Button>
+			</div>
 		</ScrollArea>
 	);
 }

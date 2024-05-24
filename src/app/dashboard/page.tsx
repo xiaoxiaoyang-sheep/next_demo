@@ -10,6 +10,8 @@ import { Dropzone } from "@/components/feature/Dropzone";
 import { usePasteFile } from "@/hooks/usePasteFile";
 import { UploadPreview } from "@/components/feature/UploadPreview";
 import { FileList } from "@/components/feature/FileList";
+import { FilesOrderByColumn } from "@/server/routes/file";
+import { MoveUp, MoveDown } from "lucide-react";
 
 export default function Home() {
 	const [uppy] = useState(() => {
@@ -28,6 +30,10 @@ export default function Home() {
 		return uppy;
 	});
 
+	const [orderBy, setOrderBy] = useState<
+		Exclude<FilesOrderByColumn, undefined>
+	>({ field: "createdAt", order: "desc" });
+
 	usePasteFile({
 		onFilePaste: (files) => {
 			uppy.addFiles(
@@ -43,10 +49,14 @@ export default function Home() {
 			<div className="container flex justify-between items-center h-[60px]">
 				<Button
 					onClick={() => {
-						uppy.upload();
+						setOrderBy((current) => ({
+							...current,
+							order: current.order === "asc" ? "desc" : "asc",
+						}));
 					}}
 				>
-					Upload
+					Created At{" "}
+					{orderBy.order === "desc" ? <MoveUp /> : <MoveDown />}
 				</Button>
 				<UploadButton uppy={uppy}></UploadButton>
 			</div>
@@ -60,7 +70,7 @@ export default function Home() {
 									Drop File Here to Upload
 								</div>
 							)}
-							<FileList uppy={uppy}></FileList>
+							<FileList uppy={uppy} orderBy={orderBy}></FileList>
 						</>
 					);
 				}}

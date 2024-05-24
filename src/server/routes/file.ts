@@ -11,15 +11,25 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { v4 as uuid } from "uuid";
 import { db } from "../db/db";
 import { files } from "../db/schema";
-import { desc, sql } from "drizzle-orm";
+import { desc, sql, asc } from "drizzle-orm";
 import { serverCaller } from "../router";
 import { escape } from "querystring";
+import { filesCanOrderByColumns } from "../db/validate-schema";
 
 const bucket = "image-saas-1317906180";
 const apiEndpoint = "https://cos.ap-nanjing.myqcloud.com";
 const region = "ap-nanjing";
 const COS_APP_ID = "AKID0xmmjXAct584tcVCmEl6LPGtbM2e8SaV";
 const COS_APP_SECRET = "vz58BQbs7BAxnbKblokV3SwOhBmMtHVd";
+
+const filesOrderByColumnSchema = z
+	.object({
+		field: filesCanOrderByColumns.keyof(),
+		order: z.enum(["desc", "asc"]),
+	})
+	.optional();
+
+export type FilesOrderByColumn = z.infer<typeof filesOrderByColumnSchema>;
 
 export const fileRoutes = router({
 	createPresignedUrl: protectedProcedure
@@ -148,32 +158,54 @@ export const fileRoutes = router({
 					})
 					.optional(),
 				limit: z.number().default(10),
+				orderBy: filesOrderByColumnSchema,
 			})
 		)
 		.query(async ({ input }) => {
-			const { cursor, limit } = input;
-        
-			const result = await db
-				.select()
-				.from(files)
-				.limit(limit)
-				.where(
-					cursor
-						? sql`("files"."created_at", "files"."id") < (${new Date(
+			const {
+				cursor,
+				limit,
+				orderBy = { field: "createdAt", order: "desc" },
+			} = input;
+
+
+			const whereParam =
+				orderBy.order === "desc"
+					? cursor
+						? sql `("files"."created_at", "files"."id") < (${new Date(
 								cursor.createdAt
 						  ).toISOString()}, ${cursor.id})`
 						: undefined
-				)
-				.orderBy(desc(files.createdAt));
+					: cursor
+					? sql `("files"."created_at", "files"."id") > (${new Date(
+							cursor.createdAt
+					  ).toISOString()}, ${cursor.id})`
+					: undefined;
 
-            await Promise.all(result.map(async (file) => {
-				const url = await serverCaller(
-					{}
-				).file.createDownloadPresignedUrl({
-					key: decodeURIComponent(file.path),
-				});
-				file.url = url;
-			}))
+			const statement = db
+				.select()
+				.from(files)
+				.limit(limit)
+				.where(whereParam);
+
+			statement.orderBy(
+				orderBy.order === "desc"
+					? desc(files[orderBy.field])
+					: asc(files[orderBy.field])
+			);
+
+			const result = await statement;
+
+			await Promise.all(
+				result.map(async (file) => {
+					const url = await serverCaller(
+						{}
+					).file.createDownloadPresignedUrl({
+						key: decodeURIComponent(file.path),
+					});
+					file.url = url;
+				})
+			);
 
 			return {
 				items: result,

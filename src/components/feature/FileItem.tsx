@@ -12,13 +12,14 @@ export function FileItem({
 	isImage: boolean;
 }) {
 	return isImage ? (
-		<img className=" max-h-[13.9rem] max-w-[13.9rem]" src={url} alt={name} />
+		<img className=" max-h-[13.9rem] max-w-[13.9rem]" src={url} alt={name} draggable={false} />
 	) : (
 		<Image
 			src="/unknown-file-types.png"
 			alt="unknow file type"
 			width={100}
 			height={100}
+            draggable={false}
 		></Image>
 	);
 }
