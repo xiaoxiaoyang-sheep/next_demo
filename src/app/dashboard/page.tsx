@@ -1,17 +1,12 @@
 "use client";
 
-import { createTRPCContext, serverCaller } from "@/utils/trpc";
 import { Uppy } from "@uppy/core";
-import type { UploadCallback, UploadSuccessCallback } from "@uppy/core";
 import AWSS3 from "@uppy/aws-s3";
-import { useEffect, useState } from "react";
-import { useUppyState } from "./useUppyState";
+import { useState } from "react";
 import { Button } from "@/components/ui/Button";
-import { trpcClientReact, trpcPureClient } from "@/utils/api";
+import { trpcPureClient } from "@/utils/api";
 import { UploadButton } from "@/components/feature/UploadButton";
 import { Dropzone } from "@/components/feature/Dropzone";
-import Image from "next/image";
-import { cn } from "@/lib/utils";
 import { usePasteFile } from "@/hooks/usePasteFile";
 import { UploadPreview } from "@/components/feature/UploadPreview";
 import { FileList } from "@/components/feature/FileList";
