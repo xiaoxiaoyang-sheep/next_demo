@@ -13,7 +13,7 @@ export const withLoggerProcedure = procedure.use(async ({ ctx, next }) => {
 
 	const result = await next();
 
-	console.log("----> Api Time", Date.now());
+	console.log("----> Api Time", Date.now() - start);
 	return result;
 });
 

@@ -11,7 +11,7 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { v4 as uuid } from "uuid";
 import { db } from "../db/db";
 import { files } from "../db/schema";
-import { desc, sql, asc } from "drizzle-orm";
+import { desc, sql, asc, eq, isNull, and } from "drizzle-orm";
 import { serverCaller } from "../router";
 import { escape } from "querystring";
 import { filesCanOrderByColumns } from "../db/validate-schema";
@@ -168,19 +168,26 @@ export const fileRoutes = router({
 				orderBy = { field: "createdAt", order: "desc" },
 			} = input;
 
+			const deletedFilter = isNull(files.deletedAt);
 
 			const whereParam =
 				orderBy.order === "desc"
 					? cursor
-						? sql `("files"."created_at", "files"."id") < (${new Date(
-								cursor.createdAt
-						  ).toISOString()}, ${cursor.id})`
-						: undefined
+						? and(
+								sql`("files"."created_at", "files"."id") < (${new Date(
+									cursor.createdAt
+								).toISOString()}, ${cursor.id})`,
+								deletedFilter
+						  )
+						: deletedFilter
 					: cursor
-					? sql `("files"."created_at", "files"."id") > (${new Date(
-							cursor.createdAt
-					  ).toISOString()}, ${cursor.id})`
-					: undefined;
+					? and(
+							sql`("files"."created_at", "files"."id") > (${new Date(
+								cursor.createdAt
+							).toISOString()}, ${cursor.id})`,
+							deletedFilter
+					  )
+					: deletedFilter;
 
 			const statement = db
 				.select()
@@ -217,5 +224,16 @@ export const fileRoutes = router({
 						  }
 						: null,
 			};
+		}),
+
+	deleteFile: protectedProcedure
+		.input(z.string())
+		.mutation(async ({ ctx, input }) => {
+			return db
+				.update(files)
+				.set({
+					deletedAt: new Date(),
+				})
+				.where(eq(files.id, input));
 		}),
 });
