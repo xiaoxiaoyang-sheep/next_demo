@@ -15,7 +15,11 @@ import { MoveUp, MoveDown } from "lucide-react";
 import { Switch } from "@/components/ui/Switch";
 import { Label } from "@/components/ui/Label";
 
-export default function Home() {
+export default function AppPage({
+	params: { id: appId },
+}: {
+	params: { id: string };
+}) {
 	const [uppy] = useState(() => {
 		const uppy = new Uppy();
 		uppy.use(AWSS3, {
@@ -62,7 +66,10 @@ export default function Home() {
 						Created At{" "}
 						{orderBy.order === "desc" ? <MoveUp /> : <MoveDown />}
 					</Button>
-					<Switch id="show_deleted" onCheckedChange={(checked) => setShowDeleted(checked)}></Switch>
+					<Switch
+						id="show_deleted"
+						onCheckedChange={(checked) => setShowDeleted(checked)}
+					></Switch>
 					<Label htmlFor="show_deleted">Show Deleted</Label>
 				</div>
 
@@ -78,7 +85,12 @@ export default function Home() {
 									Drop File Here to Upload
 								</div>
 							)}
-							<FileList uppy={uppy} orderBy={orderBy} showDeleted={showDeleted}></FileList>
+							<FileList
+								uppy={uppy}
+								orderBy={orderBy}
+								showDeleted={showDeleted}
+								appId={appId}
+							></FileList>
 						</>
 					);
 				}}

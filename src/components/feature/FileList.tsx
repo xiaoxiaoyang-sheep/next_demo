@@ -18,15 +18,18 @@ export function FileList({
 	uppy,
 	orderBy,
 	showDeleted,
+	appId,
 }: {
 	uppy: Uppy;
 	showDeleted: boolean;
 	orderBy: FilesOrderByColumn;
+	appId: string;
 }) {
 	const queryKey = {
 		limit: 10,
 		showDeleted,
 		orderBy,
+		appId,
 	};
 
 	const {
@@ -37,9 +40,9 @@ export function FileList({
 		{ ...queryKey },
 		{
 			getNextPageParam: (resp) => resp.nextCursor,
-            refetchOnMount: false,
-            refetchOnWindowFocus: false,
-            refetchOnReconnect: false
+			refetchOnMount: false,
+			refetchOnWindowFocus: false,
+			refetchOnReconnect: false,
 		}
 	);
 
@@ -63,9 +66,9 @@ export function FileList({
 							file.data instanceof File ? file.data.name : "test",
 						path: resp.uploadURL ?? "",
 						type: file.data.type,
+                        appId
 					})
 					.then((resp) => {
-
 						utils.file.infinityQueryFiles.setInfiniteData(
 							{ ...queryKey },
 							(prev) => {

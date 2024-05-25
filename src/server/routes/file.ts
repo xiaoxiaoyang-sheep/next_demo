@@ -117,6 +117,7 @@ export const fileRoutes = router({
 				name: z.string(),
 				path: z.string(),
 				type: z.string(),
+				appId: z.string(),
 			})
 		)
 		.mutation(async ({ ctx, input }) => {
@@ -141,25 +142,35 @@ export const fileRoutes = router({
 	/**
 	 * 读取数据库索引文件
 	 */
-	listFiles: protectedProcedure.query(async ({ ctx }) => {
-		const result = await db.query.files.findMany({
-			orderBy: [desc(files.createdAt)],
-			where: (files, { eq }) => eq(files.userId, ctx.session.user.id),
-		});
+	listFiles: protectedProcedure
+		.input(
+			z.object({
+				appId: z.string(),
+			})
+		)
+		.query(async ({ ctx, input }) => {
+			const result = await db.query.files.findMany({
+				orderBy: [desc(files.createdAt)],
+				where: (files, { eq }) =>
+					and(
+						eq(files.userId, ctx.session.user.id),
+						eq(files.appId, input.appId)
+					),
+			});
 
-		// await Promise.all(
-		// 	result.map(async (file) => {
-		// 		const url = await serverCaller(
-		// 			{}
-		// 		).file.createDownloadPresignedUrl({
-		// 			key: decodeURIComponent(file.path),
-		// 		});
-		// 		file.url = url;
-		// 	})
-		// );
+			// await Promise.all(
+			// 	result.map(async (file) => {
+			// 		const url = await serverCaller(
+			// 			{}
+			// 		).file.createDownloadPresignedUrl({
+			// 			key: decodeURIComponent(file.path),
+			// 		});
+			// 		file.url = url;
+			// 	})
+			// );
 
-		return result;
-	}),
+			return result;
+		}),
 
 	/**
 	 * 分页读取文件
@@ -176,6 +187,7 @@ export const fileRoutes = router({
 				limit: z.number().default(10),
 				orderBy: filesOrderByColumnSchema,
 				showDeleted: z.boolean().default(false),
+				appId: z.string(),
 			})
 		)
 		.query(async ({ input, ctx }) => {
@@ -184,39 +196,38 @@ export const fileRoutes = router({
 				limit,
 				orderBy = { field: "createdAt", order: "desc" },
 				showDeleted,
+				appId,
 			} = input;
 
 			const deletedFilter = showDeleted
 				? undefined
 				: isNull(files.deletedAt);
 			const userFilter = eq(files.userId, ctx.session.user.id);
-
-			const whereParam =
-				orderBy.order === "desc"
-					? cursor
-						? and(
-								sql`("files"."created_at", "files"."id") < (${new Date(
-									cursor.createdAt
-								).toISOString()}, ${cursor.id})`,
-								deletedFilter,
-								userFilter
-						  )
-						: and(deletedFilter, userFilter)
-					: cursor
-					? and(
-							sql`("files"."created_at", "files"."id") > (${new Date(
-								cursor.createdAt
-							).toISOString()}, ${cursor.id})`,
-							deletedFilter,
-							userFilter
-					  )
-					: and(deletedFilter, userFilter);
+			const appFilter = eq(files.appId, appId);
+			const cursorFilter = cursor
+				? orderBy.order === "desc"
+					? sql`("files"."created_at", "files"."id") < (${new Date(
+							cursor.createdAt
+					  ).toISOString()}, ${cursor!.id})`
+					: sql`("files"."created_at", "files"."id") > (${new Date(
+							cursor.createdAt
+					  ).toISOString()}, ${cursor!.id})`
+				: undefined;
 
 			const statement = db
 				.select()
 				.from(files)
 				.limit(limit)
-				.where(whereParam);
+				.where(
+					cursor
+						? and(
+								cursorFilter,
+								deletedFilter,
+								userFilter,
+								appFilter
+						  )
+						: and(deletedFilter, userFilter, appFilter)
+				);
 
 			statement.orderBy(
 				orderBy.order === "desc"
@@ -225,17 +236,6 @@ export const fileRoutes = router({
 			);
 
 			const result = await statement;
-
-			// await Promise.all(
-			// 	result.map(async (file) => {
-			// 		const url = await serverCaller(
-			// 			{}
-			// 		).file.createDownloadPresignedUrl({
-			// 			key: decodeURIComponent(file.path),
-			// 		});
-			// 		file.url = url;
-			// 	})
-			// );
 
 			return {
 				items: result,
