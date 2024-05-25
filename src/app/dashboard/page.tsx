@@ -48,7 +48,7 @@ export default function Home() {
 	});
 
 	return (
-		<div className=" mx-auto h-screen">
+		<div className=" mx-auto h-full">
 			<div className="container flex justify-between items-center h-[60px]">
 				<div className="flex items-center h-full gap-2">
 					<Button

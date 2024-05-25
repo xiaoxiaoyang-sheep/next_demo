@@ -37,6 +37,9 @@ export function FileList({
 		{ ...queryKey },
 		{
 			getNextPageParam: (resp) => resp.nextCursor,
+            refetchOnMount: false,
+            refetchOnWindowFocus: false,
+            refetchOnReconnect: false
 		}
 	);
 
@@ -161,7 +164,7 @@ export function FileList({
 
 	return (
 		<ScrollArea className=" h-full">
-			{isPending && <div>Loading</div>}
+			{isPending && <div className=" text-center">Loading</div>}
 			<div
 				className={cn(
 					"flex flex-wrap justify-center gap-4 relative container"

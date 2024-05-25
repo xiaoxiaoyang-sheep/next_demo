@@ -141,21 +141,22 @@ export const fileRoutes = router({
 	/**
 	 * 读取数据库索引文件
 	 */
-	listFiles: protectedProcedure.query(async () => {
+	listFiles: protectedProcedure.query(async ({ ctx }) => {
 		const result = await db.query.files.findMany({
 			orderBy: [desc(files.createdAt)],
+			where: (files, { eq }) => eq(files.userId, ctx.session.user.id),
 		});
 
-		await Promise.all(
-			result.map(async (file) => {
-				const url = await serverCaller(
-					{}
-				).file.createDownloadPresignedUrl({
-					key: decodeURIComponent(file.path),
-				});
-				file.url = url;
-			})
-		);
+		// await Promise.all(
+		// 	result.map(async (file) => {
+		// 		const url = await serverCaller(
+		// 			{}
+		// 		).file.createDownloadPresignedUrl({
+		// 			key: decodeURIComponent(file.path),
+		// 		});
+		// 		file.url = url;
+		// 	})
+		// );
 
 		return result;
 	}),
@@ -174,18 +175,21 @@ export const fileRoutes = router({
 					.optional(),
 				limit: z.number().default(10),
 				orderBy: filesOrderByColumnSchema,
-                showDeleted: z.boolean().default(false)
+				showDeleted: z.boolean().default(false),
 			})
 		)
-		.query(async ({ input }) => {
+		.query(async ({ input, ctx }) => {
 			const {
 				cursor,
 				limit,
 				orderBy = { field: "createdAt", order: "desc" },
-                showDeleted
+				showDeleted,
 			} = input;
 
-			const deletedFilter = showDeleted ? undefined : isNull(files.deletedAt);
+			const deletedFilter = showDeleted
+				? undefined
+				: isNull(files.deletedAt);
+			const userFilter = eq(files.userId, ctx.session.user.id);
 
 			const whereParam =
 				orderBy.order === "desc"
@@ -194,17 +198,19 @@ export const fileRoutes = router({
 								sql`("files"."created_at", "files"."id") < (${new Date(
 									cursor.createdAt
 								).toISOString()}, ${cursor.id})`,
-								deletedFilter
+								deletedFilter,
+								userFilter
 						  )
-						: deletedFilter
+						: and(deletedFilter, userFilter)
 					: cursor
 					? and(
 							sql`("files"."created_at", "files"."id") > (${new Date(
 								cursor.createdAt
 							).toISOString()}, ${cursor.id})`,
-							deletedFilter
+							deletedFilter,
+							userFilter
 					  )
-					: deletedFilter;
+					: and(deletedFilter, userFilter);
 
 			const statement = db
 				.select()
