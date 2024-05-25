@@ -12,6 +12,8 @@ import { UploadPreview } from "@/components/feature/UploadPreview";
 import { FileList } from "@/components/feature/FileList";
 import { FilesOrderByColumn } from "@/server/routes/file";
 import { MoveUp, MoveDown } from "lucide-react";
+import { Switch } from "@/components/ui/Switch";
+import { Label } from "@/components/ui/Label";
 
 export default function Home() {
 	const [uppy] = useState(() => {
@@ -29,6 +31,7 @@ export default function Home() {
 		});
 		return uppy;
 	});
+	const [showDeleted, setShowDeleted] = useState(false);
 
 	const [orderBy, setOrderBy] = useState<
 		Exclude<FilesOrderByColumn, undefined>
@@ -47,17 +50,22 @@ export default function Home() {
 	return (
 		<div className=" mx-auto h-screen">
 			<div className="container flex justify-between items-center h-[60px]">
-				<Button
-					onClick={() => {
-						setOrderBy((current) => ({
-							...current,
-							order: current.order === "asc" ? "desc" : "asc",
-						}));
-					}}
-				>
-					Created At{" "}
-					{orderBy.order === "desc" ? <MoveUp /> : <MoveDown />}
-				</Button>
+				<div className="flex items-center h-full gap-2">
+					<Button
+						onClick={() => {
+							setOrderBy((current) => ({
+								...current,
+								order: current.order === "asc" ? "desc" : "asc",
+							}));
+						}}
+					>
+						Created At{" "}
+						{orderBy.order === "desc" ? <MoveUp /> : <MoveDown />}
+					</Button>
+					<Switch id="show_deleted" onCheckedChange={(checked) => setShowDeleted(checked)}></Switch>
+					<Label htmlFor="show_deleted">Show Deleted</Label>
+				</div>
+
 				<UploadButton uppy={uppy}></UploadButton>
 			</div>
 
@@ -70,7 +78,7 @@ export default function Home() {
 									Drop File Here to Upload
 								</div>
 							)}
-							<FileList uppy={uppy} orderBy={orderBy}></FileList>
+							<FileList uppy={uppy} orderBy={orderBy} showDeleted={showDeleted}></FileList>
 						</>
 					);
 				}}

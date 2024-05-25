@@ -32,6 +32,9 @@ const filesOrderByColumnSchema = z
 export type FilesOrderByColumn = z.infer<typeof filesOrderByColumnSchema>;
 
 export const fileRoutes = router({
+	/**
+	 * 上传文件预签名
+	 */
 	createPresignedUrl: protectedProcedure
 		.input(
 			z.object({
@@ -73,6 +76,9 @@ export const fileRoutes = router({
 			};
 		}),
 
+	/**
+	 * 读取文件预签名
+	 */
 	createDownloadPresignedUrl: protectedProcedure
 		.input(
 			z.object({
@@ -102,6 +108,9 @@ export const fileRoutes = router({
 			return url;
 		}),
 
+	/**
+	 * 保存文件到数据库
+	 */
 	saveFile: protectedProcedure
 		.input(
 			z.object({
@@ -129,6 +138,9 @@ export const fileRoutes = router({
 			return photo[0];
 		}),
 
+	/**
+	 * 读取数据库索引文件
+	 */
 	listFiles: protectedProcedure.query(async () => {
 		const result = await db.query.files.findMany({
 			orderBy: [desc(files.createdAt)],
@@ -148,6 +160,9 @@ export const fileRoutes = router({
 		return result;
 	}),
 
+	/**
+	 * 分页读取文件
+	 */
 	infinityQueryFiles: protectedProcedure
 		.input(
 			z.object({
@@ -159,6 +174,7 @@ export const fileRoutes = router({
 					.optional(),
 				limit: z.number().default(10),
 				orderBy: filesOrderByColumnSchema,
+                showDeleted: z.boolean().default(false)
 			})
 		)
 		.query(async ({ input }) => {
@@ -166,9 +182,10 @@ export const fileRoutes = router({
 				cursor,
 				limit,
 				orderBy = { field: "createdAt", order: "desc" },
+                showDeleted
 			} = input;
 
-			const deletedFilter = isNull(files.deletedAt);
+			const deletedFilter = showDeleted ? undefined : isNull(files.deletedAt);
 
 			const whereParam =
 				orderBy.order === "desc"
@@ -203,16 +220,16 @@ export const fileRoutes = router({
 
 			const result = await statement;
 
-			await Promise.all(
-				result.map(async (file) => {
-					const url = await serverCaller(
-						{}
-					).file.createDownloadPresignedUrl({
-						key: decodeURIComponent(file.path),
-					});
-					file.url = url;
-				})
-			);
+			// await Promise.all(
+			// 	result.map(async (file) => {
+			// 		const url = await serverCaller(
+			// 			{}
+			// 		).file.createDownloadPresignedUrl({
+			// 			key: decodeURIComponent(file.path),
+			// 		});
+			// 		file.url = url;
+			// 	})
+			// );
 
 			return {
 				items: result,
@@ -226,6 +243,9 @@ export const fileRoutes = router({
 			};
 		}),
 
+	/**
+	 * 删除文件
+	 */
 	deleteFile: protectedProcedure
 		.input(z.string())
 		.mutation(async ({ ctx, input }) => {

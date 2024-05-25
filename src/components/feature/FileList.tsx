@@ -17,22 +17,24 @@ type FileResult = inferRouterOutputs<AppRouter>["file"]["listFiles"];
 export function FileList({
 	uppy,
 	orderBy,
+	showDeleted,
 }: {
 	uppy: Uppy;
+	showDeleted: boolean;
 	orderBy: FilesOrderByColumn;
 }) {
-
-    const queryKey = {
-        limit: 10,
-        orderBy,
-    };
+	const queryKey = {
+		limit: 10,
+		showDeleted,
+		orderBy,
+	};
 
 	const {
 		data: infinityQueryData,
 		isPending,
 		fetchNextPage,
 	} = trpcClientReact.file.infinityQueryFiles.useInfiniteQuery(
-		{...queryKey},
+		{ ...queryKey },
 		{
 			getNextPageParam: (resp) => resp.nextCursor,
 		}
@@ -59,17 +61,10 @@ export function FileList({
 						path: resp.uploadURL ?? "",
 						type: file.data.type,
 					})
-					.then(async (resp) => {
-						const presignedUrl =
-							await trpcPureClient.file.createDownloadPresignedUrl.query(
-								{
-									key: decodeURIComponent(resp.path),
-								}
-							);
-						resp.url = presignedUrl;
+					.then((resp) => {
 
 						utils.file.infinityQueryFiles.setInfiniteData(
-							{...queryKey},
+							{ ...queryKey },
 							(prev) => {
 								if (!prev) {
 									return prev;
@@ -142,25 +137,27 @@ export function FileList({
 		}
 	}, [fetchNextPage]);
 
-    const handleFileDelete = (id: string) => {
-        utils.file.infinityQueryFiles.setInfiniteData({...queryKey}, (prev) => {
-            if (!prev) {
-                return prev;
-            }
-            return {
-                ...prev,
-                pages: prev.pages.map((page, index) => {
-                    if (index === 0) {
-                        return {
-                            ...page,
-                            items: page.items.filter((item) => item.id !== id),
-                        };
-                    }
-                    return page;
-                }),
-            };
-        });
-    };
+	const handleFileDelete = (id: string) => {
+		utils.file.infinityQueryFiles.setInfiniteData(
+			{ ...queryKey },
+			(prev) => {
+				if (!prev) {
+					return prev;
+				}
+				console.log(prev);
+
+				return {
+					...prev,
+					pages: prev.pages.map((page, index) => {
+						return {
+							...page,
+							items: page.items.filter((item) => item.id !== id),
+						};
+					}),
+				};
+			}
+		);
+	};
 
 	return (
 		<ScrollArea className=" h-full">
@@ -192,7 +189,10 @@ export function FileList({
 						>
 							<div className=" absolute inset-0 opacity-0 hover:opacity-100 transition-all bg-background/30 justify-center items-center flex">
 								<CopyUrl url={file.url}></CopyUrl>
-								<DeleteFile fileId={file.id} onDeleteSuccess={handleFileDelete}></DeleteFile>
+								<DeleteFile
+									fileId={file.id}
+									onDeleteSuccess={handleFileDelete}
+								></DeleteFile>
 							</div>
 
 							<RemoteFileItem
