@@ -34,7 +34,7 @@ export default function CreateApp() {
 			<form action={createApp} className="w-full max-w-md flex flex-col gap-4">
 				<h1 className="text-center text-2xl font-bold">Create App</h1>
 				<Input name="name" placeholder="App Name" minLength={3} required />
-				<Textarea name="descript" placeholder="Descpipt" />
+				<Textarea name="description" placeholder="Description" />
 				<SubmitButton></SubmitButton>
 			</form>
 		</div>

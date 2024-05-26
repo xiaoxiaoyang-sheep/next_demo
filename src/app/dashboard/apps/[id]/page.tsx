@@ -14,6 +14,7 @@ import { FilesOrderByColumn } from "@/server/routes/file";
 import { MoveUp, MoveDown } from "lucide-react";
 import { Switch } from "@/components/ui/Switch";
 import { Label } from "@/components/ui/Label";
+import Link from "next/link";
 
 export default function AppPage({
 	params: { id: appId },
@@ -72,8 +73,12 @@ export default function AppPage({
 					></Switch>
 					<Label htmlFor="show_deleted">Show Deleted</Label>
 				</div>
-
-				<UploadButton uppy={uppy}></UploadButton>
+				<div className="flex justify-center gap-2">
+					<UploadButton uppy={uppy}></UploadButton>
+					<Button asChild>
+						<Link href="/dashboard/apps/new">new app</Link>
+					</Button>
+				</div>
 			</div>
 
 			<Dropzone uppy={uppy} className=" relative h-[calc(100%-60px)]">
