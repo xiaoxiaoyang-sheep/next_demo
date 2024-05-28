@@ -8,6 +8,8 @@ import {
 	uuid,
 	varchar,
 	index,
+	serial,
+	json,
 } from "drizzle-orm/pg-core";
 import postgres from "postgres";
 import { drizzle } from "drizzle-orm/postgres-js";
@@ -28,6 +30,7 @@ export const users = pgTable("user", {
 export const usersRelations = relations(users, ({ many }) => ({
 	files: many(files),
 	apps: many(apps),
+	storages: many(storageConfiguration),
 }));
 
 export const accounts = pgTable(
@@ -105,10 +108,60 @@ export const apps = pgTable("apps", {
 	createdAt: timestamp("created_at", { mode: "date" }).defaultNow(),
 	deletedAt: timestamp("deleted_at", { mode: "date" }),
 	userId: text("user_id").notNull(),
-	// storageId: integer("storage_id")
+	storageId: integer("storage_id"),
 });
 
 export const appRelations = relations(apps, ({ one, many }) => ({
 	user: one(users, { fields: [apps.userId], references: [users.id] }),
+	storage: one(storageConfiguration, {
+		fields: [apps.storageId],
+		references: [storageConfiguration.id],
+	}),
 	files: many(files),
+	apiKeys: many(apiKeys),
+}));
+
+export type S3StorageConfiguration = {
+	bucket: string;
+	region: string;
+	accessKeyId: string;
+	secretAccessKey: string;
+	apiEndpoint?: string;
+};
+
+export type StorageConfiguration = S3StorageConfiguration;
+
+export const storageConfiguration = pgTable("storageConfiguration", {
+	id: serial("id").primaryKey(),
+	name: varchar("name", { length: 100 }).notNull(),
+	userId: uuid("user_id").notNull(),
+	configuration: json("configuration")
+		.$type<StorageConfiguration>()
+		.notNull(),
+	createdAt: timestamp("created_at", { mode: "date" }).defaultNow(),
+	deletedAt: timestamp("deleted_at", { mode: "date" }),
+});
+
+export const storageConfigurationRelations = relations(
+	storageConfiguration,
+	({ one }) => ({
+		user: one(users, {
+			fields: [storageConfiguration.userId],
+			references: [users.id],
+		}),
+	})
+);
+
+export const apiKeys = pgTable("apiKeys", {
+	id: serial("id").primaryKey(),
+	name: varchar("name", { length: 255 }).notNull(),
+	clientId: varchar("client_id", {length: 100}).notNull().unique(),
+	key: varchar("key", { length: 100 }).notNull().unique(),
+	appId: uuid("app_id").notNull(),
+	createdAt: timestamp("created_at", { mode: "date" }).defaultNow(),
+	deletedAt: timestamp("deleted_at", { mode: "date" }),
+});
+
+export const apiKeysRelations = relations(apiKeys, ({ one }) => ({
+	app: one(apps, { fields: [apiKeys.appId], references: [apps.id] }),
 }));

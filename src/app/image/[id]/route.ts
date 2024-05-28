@@ -1,36 +1,46 @@
 import { db } from "@/server/db/db";
 import { files } from "@/server/db/schema";
 import { GetObjectCommand, GetObjectCommandInput, S3Client } from "@aws-sdk/client-s3";
+import { TRPCError } from "@trpc/server";
 import { NextRequest, NextResponse } from "next/server";
 import sharp from "sharp"
-
-const bucket = "image-saas-1317906180";
-const apiEndpoint = "https://cos.ap-nanjing.myqcloud.com";
-const region = "ap-nanjing";
-const COS_APP_ID = "AKID0xmmjXAct584tcVCmEl6LPGtbM2e8SaV";
-const COS_APP_SECRET = "vz58BQbs7BAxnbKblokV3SwOhBmMtHVd";
 
 
 export async function GET(request: NextRequest, {params: {id}}: {params: {id: string}}) {
     const file = await db.query.files.findFirst({
-        where: (files, {eq}) => eq(files.id, id)
+        where: (files, {eq}) => eq(files.id, id),
+        with: {
+            app: {
+                with: {
+                    storage: true
+                }
+            }
+        }
     })
+
+    if(!file?.app.storage) {
+        throw new TRPCError({
+            code: "BAD_REQUEST"
+        })
+    }
+
+    const storage = file.app.storage.configuration;
 
     if(!file || !file.contentType.startsWith("image")) {
         return new NextResponse('', {status: 400})
     }
 
     const params: GetObjectCommandInput = {
-        Bucket: bucket,
+        Bucket: storage.bucket,
         Key: decodeURIComponent(file.path),
     }
 
     const s3Client = new S3Client({
-        endpoint: apiEndpoint,
-        region: region,
+        endpoint: storage.apiEndpoint,
+        region: storage.region,
         credentials: {
-            accessKeyId: COS_APP_ID,
-            secretAccessKey: COS_APP_SECRET,
+            accessKeyId: storage.accessKeyId,
+            secretAccessKey: storage.secretAccessKey,
         }
     })
 

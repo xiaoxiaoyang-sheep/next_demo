@@ -1,4 +1,4 @@
-import { protectedProcedure, router } from "../trpc";
+import { router, withAppProcedure } from "../trpc";
 import z from "zod";
 import {
 	S3Client,
@@ -10,17 +10,12 @@ import {
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { v4 as uuid } from "uuid";
 import { db } from "../db/db";
-import { files } from "../db/schema";
+import { apps, files } from "../db/schema";
 import { desc, sql, asc, eq, isNull, and } from "drizzle-orm";
 import { serverCaller } from "../router";
 import { escape } from "querystring";
 import { filesCanOrderByColumns } from "../db/validate-schema";
-
-const bucket = "image-saas-1317906180";
-const apiEndpoint = "https://cos.ap-nanjing.myqcloud.com";
-const region = "ap-nanjing";
-const COS_APP_ID = "AKID0xmmjXAct584tcVCmEl6LPGtbM2e8SaV";
-const COS_APP_SECRET = "vz58BQbs7BAxnbKblokV3SwOhBmMtHVd";
+import { TRPCError } from "@trpc/server";
 
 const filesOrderByColumnSchema = z
 	.object({
@@ -35,12 +30,13 @@ export const fileRoutes = router({
 	/**
 	 * 上传文件预签名
 	 */
-	createPresignedUrl: protectedProcedure
+	createPresignedUrl: withAppProcedure
 		.input(
 			z.object({
 				filename: z.string(),
 				contentType: z.string(),
 				size: z.number(),
+				appId: z.string(),
 			})
 		)
 		.mutation(async ({ ctx, input }) => {
@@ -49,19 +45,43 @@ export const fileRoutes = router({
 			const isoString = date.toISOString();
 			const dateString = isoString.split("T")[0];
 
+			const app = !ctx.app
+				? await db.query.apps.findFirst({
+						where: (apps, { eq }) => eq(apps.id, input.appId),
+						with: { storage: true },
+				  })
+				: ctx.app;
+
+           const {user} = ctx
+
+
+			if (!app || !app.storage) {
+				throw new TRPCError({
+					code: "BAD_REQUEST",
+				});
+			}
+
+			if (app.userId !== user.id) {
+				throw new TRPCError({
+					code: "FORBIDDEN",
+				});
+			}
+
+			const storage = app.storage;
+
 			const params: PutObjectCommandInput = {
-				Bucket: bucket,
+				Bucket: storage.configuration.bucket,
 				Key: `${dateString}/${input.filename.replaceAll(" ", "_")}`,
 				ContentType: input.contentType,
 				ContentLength: input.size,
 			};
 
 			const s3Client = new S3Client({
-				endpoint: apiEndpoint,
-				region: region,
+				endpoint: storage.configuration.apiEndpoint,
+				region: storage.configuration.region,
 				credentials: {
-					accessKeyId: COS_APP_ID,
-					secretAccessKey: COS_APP_SECRET,
+					accessKeyId: storage.configuration.accessKeyId,
+					secretAccessKey: storage.configuration.secretAccessKey,
 				},
 			});
 
@@ -79,39 +99,39 @@ export const fileRoutes = router({
 	/**
 	 * 读取文件预签名
 	 */
-	createDownloadPresignedUrl: protectedProcedure
-		.input(
-			z.object({
-				key: z.string(),
-			})
-		)
-		.query(async ({ input }) => {
-			const params: GetObjectCommandInput = {
-				Bucket: bucket,
-				Key: input.key,
-			};
+	// createDownloadPresignedUrl: protectedProcedure
+	// 	.input(
+	// 		z.object({
+	// 			key: z.string(),
+	// 		})
+	// 	)
+	// 	.query(async ({ input }) => {
+	// 		const params: GetObjectCommandInput = {
+	// 			Bucket: bucket,
+	// 			Key: input.key,
+	// 		};
 
-			const s3Client = new S3Client({
-				endpoint: apiEndpoint,
-				region: region,
-				credentials: {
-					accessKeyId: COS_APP_ID,
-					secretAccessKey: COS_APP_SECRET,
-				},
-			});
+	// 		const s3Client = new S3Client({
+	// 			endpoint: apiEndpoint,
+	// 			region: region,
+	// 			credentials: {
+	// 				accessKeyId: COS_APP_ID,
+	// 				secretAccessKey: COS_APP_SECRET,
+	// 			},
+	// 		});
 
-			const command = new GetObjectCommand(params);
-			const url = await getSignedUrl(s3Client, command, {
-				expiresIn: 60,
-			});
+	// 		const command = new GetObjectCommand(params);
+	// 		const url = await getSignedUrl(s3Client, command, {
+	// 			expiresIn: 60,
+	// 		});
 
-			return url;
-		}),
+	// 		return url;
+	// 	}),
 
 	/**
 	 * 保存文件到数据库
 	 */
-	saveFile: protectedProcedure
+	saveFile: withAppProcedure
 		.input(
 			z.object({
 				name: z.string(),
@@ -121,8 +141,9 @@ export const fileRoutes = router({
 			})
 		)
 		.mutation(async ({ ctx, input }) => {
-			const { session } = ctx;
+			const { user } = ctx;
 			const url = new URL(input.path);
+
 
 			const photo = await db
 				.insert(files)
@@ -131,7 +152,7 @@ export const fileRoutes = router({
 					id: uuid(),
 					path: url.pathname,
 					url: url.toString(),
-					userId: session.user.id,
+					userId: user.id,
 					contentType: input.type,
 				})
 				.returning();
@@ -142,7 +163,7 @@ export const fileRoutes = router({
 	/**
 	 * 读取数据库索引文件
 	 */
-	listFiles: protectedProcedure
+	listFiles: withAppProcedure
 		.input(
 			z.object({
 				appId: z.string(),
@@ -153,21 +174,10 @@ export const fileRoutes = router({
 				orderBy: [desc(files.createdAt)],
 				where: (files, { eq }) =>
 					and(
-						eq(files.userId, ctx.session.user.id),
+						eq(files.userId, ctx.user.id),
 						eq(files.appId, input.appId)
 					),
 			});
-
-			// await Promise.all(
-			// 	result.map(async (file) => {
-			// 		const url = await serverCaller(
-			// 			{}
-			// 		).file.createDownloadPresignedUrl({
-			// 			key: decodeURIComponent(file.path),
-			// 		});
-			// 		file.url = url;
-			// 	})
-			// );
 
 			return result;
 		}),
@@ -175,7 +185,7 @@ export const fileRoutes = router({
 	/**
 	 * 分页读取文件
 	 */
-	infinityQueryFiles: protectedProcedure
+	infinityQueryFiles: withAppProcedure
 		.input(
 			z.object({
 				cursor: z
@@ -202,7 +212,7 @@ export const fileRoutes = router({
 			const deletedFilter = showDeleted
 				? undefined
 				: isNull(files.deletedAt);
-			const userFilter = eq(files.userId, ctx.session.user.id);
+			const userFilter = eq(files.userId, ctx.user.id);
 			const appFilter = eq(files.appId, appId);
 			const cursorFilter = cursor
 				? orderBy.order === "desc"
@@ -252,7 +262,7 @@ export const fileRoutes = router({
 	/**
 	 * 删除文件
 	 */
-	deleteFile: protectedProcedure
+	deleteFile: withAppProcedure
 		.input(z.string())
 		.mutation(async ({ ctx, input }) => {
 			return db

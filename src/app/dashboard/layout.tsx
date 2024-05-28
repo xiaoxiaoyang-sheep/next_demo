@@ -24,7 +24,7 @@ export default async function RootLayout({
 
 	return (
 		<div className=" h-screen">
-			<nav className=" h-[80px]  border-b relative">
+			<nav className=" h-[80px]  border-b w-full sticky top-0 z-50 bg-white">
 				<div className=" container flex justify-end items-center h-full">
 					<DropdownMenu>
 						<DropdownMenuTrigger>

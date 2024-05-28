@@ -12,7 +12,7 @@ export default function CreateApp() {
 
     async function createApp(formData: FormData) {
         "use server"
-        
+
         const name = formData.get("name");
         const description = formData.get("description");
 
@@ -33,7 +33,7 @@ export default function CreateApp() {
 		<div className="h-full flex justify-center items-center">
 			<form action={createApp} className="w-full max-w-md flex flex-col gap-4">
 				<h1 className="text-center text-2xl font-bold">Create App</h1>
-				<Input name="name" placeholder="App Name" minLength={3}  />
+				<Input name="name" placeholder="App Name" minLength={3} required  />
 				<Textarea name="description" placeholder="Description" />
 				<SubmitButton></SubmitButton>
 			</form>

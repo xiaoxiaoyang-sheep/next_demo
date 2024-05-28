@@ -2,7 +2,7 @@
 
 import { Uppy } from "@uppy/core";
 import AWSS3 from "@uppy/aws-s3";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { trpcPureClient } from "@/utils/api";
 import { UploadButton } from "@/components/feature/UploadButton";
@@ -11,7 +11,7 @@ import { usePasteFile } from "@/hooks/usePasteFile";
 import { UploadPreview } from "@/components/feature/UploadPreview";
 import { FileList } from "@/components/feature/FileList";
 import { FilesOrderByColumn } from "@/server/routes/file";
-import { MoveUp, MoveDown } from "lucide-react";
+import { MoveUp, MoveDown, Settings } from "lucide-react";
 import { Switch } from "@/components/ui/Switch";
 import { Label } from "@/components/ui/Label";
 import Link from "next/link";
@@ -31,13 +31,13 @@ export default function AppPage({
 						file.data instanceof File ? file.data.name : "test",
 					contentType: file.data.type || "",
 					size: file.size,
+					appId: appId,
 				});
 			},
 		});
 		return uppy;
 	});
 	const [showDeleted, setShowDeleted] = useState(false);
-
 	const [orderBy, setOrderBy] = useState<
 		Exclude<FilesOrderByColumn, undefined>
 	>({ field: "createdAt", order: "desc" });
@@ -76,7 +76,12 @@ export default function AppPage({
 				<div className="flex justify-center gap-2">
 					<UploadButton uppy={uppy}></UploadButton>
 					<Button asChild>
-						<Link href="/dashboard/apps/new">new app</Link>
+						<Link href="./new">new app</Link>
+					</Button>
+					<Button asChild>
+						<Link href={`/dashboard/apps/${appId}/setting/storage`}>
+							<Settings />
+						</Link>
 					</Button>
 				</div>
 			</div>

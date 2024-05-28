@@ -5,7 +5,7 @@ import { createAppSchema } from "../db/validate-schema";
 import { protectedProcedure, router } from "../trpc";
 import { v4 as uuid } from "uuid";
 
-export const appsRouter = router({
+export const appsRouters = router({
 	/**
 	 * 创建app
 	 */
