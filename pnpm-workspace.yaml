@@ -1,4 +1,5 @@
 packages:
   - packages/api
   - packages/upload-button
+  - packages/preact-vue-connect
   - examples/nuxt
