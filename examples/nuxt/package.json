@@ -16,6 +16,8 @@
     "@image-saas/api": "workspace:*",
     "@image-saas/upload-button": "workspace:*",
     "@image-saas/preact-vue-connect": "workspace:*",
+    "@image-saas/uploader": "workspace:*",
+    "@image-saas/dropzone": "workspace:*",
     "@trpc/client": "11.0.0-rc.374",
     "jsonwebtoken": "^9.0.2",
     "@types/jsonwebtoken": "^9.0.6",

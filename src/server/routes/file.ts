@@ -36,7 +36,7 @@ export const fileRoutes = router({
 				filename: z.string(),
 				contentType: z.string(),
 				size: z.number(),
-				appId: z.string(),
+				appId: z.string().optional(),
 			})
 		)
 		.mutation(async ({ ctx, input }) => {
@@ -45,9 +45,15 @@ export const fileRoutes = router({
 			const isoString = date.toISOString();
 			const dateString = isoString.split("T")[0];
 
+			if(!ctx.app && !input.appId) {
+				throw new TRPCError({
+					code: "BAD_REQUEST",
+				});
+			}
+
 			const app = !ctx.app
 				? await db.query.apps.findFirst({
-						where: (apps, { eq }) => eq(apps.id, input.appId),
+						where: (apps, { eq }) => eq(apps.id, input.appId!),
 						with: { storage: true },
 				  })
 				: ctx.app;
@@ -137,18 +143,25 @@ export const fileRoutes = router({
 				name: z.string(),
 				path: z.string(),
 				type: z.string(),
-				appId: z.string(),
+				appId: z.string().optional(),
 			})
 		)
 		.mutation(async ({ ctx, input }) => {
-			const { user } = ctx;
+			const { user, app } = ctx;
 			const url = new URL(input.path);
+
+			if(!app && !input.appId) {
+				throw new TRPCError({
+					code: "BAD_REQUEST",
+				});
+			}
 
 
 			const photo = await db
 				.insert(files)
 				.values({
 					...input,
+					appId: app ? app.id : input.appId!,
 					id: uuid(),
 					path: url.pathname,
 					url: url.toString(),
@@ -166,16 +179,23 @@ export const fileRoutes = router({
 	listFiles: withAppProcedure
 		.input(
 			z.object({
-				appId: z.string(),
+				appId: z.string().optional(),
 			})
 		)
 		.query(async ({ ctx, input }) => {
+
+			if(!ctx.app && !input.appId) {
+				throw new TRPCError({
+					code: "BAD_REQUEST",
+				});
+			}
+
 			const result = await db.query.files.findMany({
 				orderBy: [desc(files.createdAt)],
 				where: (files, { eq }) =>
 					and(
 						eq(files.userId, ctx.user.id),
-						eq(files.appId, input.appId)
+						eq(files.appId, ctx.app ? ctx.app.id : input.appId!)
 					),
 			});
 
@@ -197,7 +217,7 @@ export const fileRoutes = router({
 				limit: z.number().default(10),
 				orderBy: filesOrderByColumnSchema,
 				showDeleted: z.boolean().default(false),
-				appId: z.string(),
+				appId: z.string().optional(),
 			})
 		)
 		.query(async ({ input, ctx }) => {
@@ -209,11 +229,17 @@ export const fileRoutes = router({
 				appId,
 			} = input;
 
+			if(!ctx.app && !input.appId) {
+				throw new TRPCError({
+					code: "BAD_REQUEST",
+				});
+			}
+
 			const deletedFilter = showDeleted
 				? undefined
 				: isNull(files.deletedAt);
 			const userFilter = eq(files.userId, ctx.user.id);
-			const appFilter = eq(files.appId, appId);
+			const appFilter = eq(files.appId, appId ? appId : ctx.app.id);
 			const cursorFilter = cursor
 				? orderBy.order === "desc"
 					? sql`("files"."created_at", "files"."id") < (${new Date(

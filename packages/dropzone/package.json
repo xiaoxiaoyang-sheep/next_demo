@@ -1,7 +1,7 @@
 {
-    "name": "@image-saas/upload-button",
-    "main": "dist/upload-button.cjs",
-    "module": "dist/upload-button.js",
+    "name": "@image-saas/dropzone",
+    "main": "dist/dropzone.cjs",
+    "module": "dist/dropzone.js",
     "version": "0.0.1",
     "types": "dist/index.d.ts",
     "type": "module",
