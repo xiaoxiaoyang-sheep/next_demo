@@ -1,5 +1,6 @@
 "use client";
 
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/Accordion";
 import { Button } from "@/components/ui/Button";
 import { ScrollArea } from "@/components/ui/ScrollArea";
 import { trpcClientReact } from "@/utils/api";
@@ -38,25 +39,34 @@ export default function StoragePage({
 					<Link  href={`/dashboard/apps/${id}/setting/storage/new`}><Plus /></Link>
 				</Button>
 			</div>
-			
+			<Accordion type="single" collapsible>
 			{storages?.map((storage) => {
 				return (
-					<div
-						key={storage.id}
-						className=" border p-4 flex justify-between items-center"
-					>
-						<span>{storage.name}</span>
-						<Button disabled={storage.id === currentApp?.storageId} onClick={() => {
-							mutate({appId: id, storageId: storage.id})
-						}}>
-							{storage.id === currentApp?.storageId
-								? "Used"
-								: "Use"}
-						</Button>
-					</div>
+					<AccordionItem key={storage.id} value={storage.id.toString()}>
+						<AccordionTrigger>{storage.name}</AccordionTrigger>
+						<AccordionContent>
+							<div className=" flex justify-between w-full">
+								<span>region</span>
+								<span>{storage.configuration.region}</span>
+							</div>
+						</AccordionContent>
+					</AccordionItem>
+					// <div
+					// 	key={storage.id}
+					// 	className=" border p-4 flex justify-between items-center"
+					// >
+					// 	<span>{storage.name}</span>
+					// 	<Button disabled={storage.id === currentApp?.storageId} onClick={() => {
+					// 		mutate({appId: id, storageId: storage.id})
+					// 	}}>
+					// 		{storage.id === currentApp?.storageId
+					// 			? "Used"
+					// 			: "Use"}
+					// 	</Button>
+					// </div>
 				);
 			})}
-			
+			</Accordion>
 		</div>
 	);
 }
