@@ -8,6 +8,8 @@ import {
 } from "@/components/ui/DropdownMenu";
 import { getServerSession } from "@/server/auth";
 import { redirect } from "next/navigation";
+import { ThemeProvider } from "./ThemeProvider";
+import { ThemeTroggle } from "./ThemeToggle";
 
 export default async function RootLayout({
 	children,
@@ -23,32 +25,37 @@ export default async function RootLayout({
 	}
 
 	return (
-		<div className=" h-full">
-			<nav className=" h-[80px]  border-b w-full sticky top-0 z-50 bg-white">
-				<div className=" container flex justify-end items-center h-full">
-					<DropdownMenu>
-						<DropdownMenuTrigger>
-							<Avatar>
-								<AvatarImage
-									src={session.user.image!}
-								></AvatarImage>
-								<AvatarFallback>
-									{session.user.name?.substring(0, 2)}
-								</AvatarFallback>
-							</Avatar>
-						</DropdownMenuTrigger>
-						<DropdownMenuContent>
-							<DropdownMenuLabel>
-								{session.user.name}
-							</DropdownMenuLabel>
-						</DropdownMenuContent>
-					</DropdownMenu>
-				</div>
-				<div className=" absolute top-0 h-full left-1/2 -translate-x-1/2 flex justify-center items-center">
-					{nav}
-				</div>
-			</nav>
-			<main className=" h-[calc(100%-80px)] overflow-hidden">{children}</main>
-		</div>
+		<ThemeProvider>
+			<div className=" h-full">
+				<nav className=" h-[80px]  border-b w-full sticky top-0 z-50 bg-[var(--background)]">
+					<div className=" container flex justify-end items-center h-full gap-2">
+						<ThemeTroggle></ThemeTroggle>
+						<DropdownMenu>
+							<DropdownMenuTrigger>
+								<Avatar>
+									<AvatarImage
+										src={session.user.image!}
+									></AvatarImage>
+									<AvatarFallback>
+										{session.user.name?.substring(0, 2)}
+									</AvatarFallback>
+								</Avatar>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent>
+								<DropdownMenuLabel>
+									{session.user.name}
+								</DropdownMenuLabel>
+							</DropdownMenuContent>
+						</DropdownMenu>
+					</div>
+					<div className=" absolute top-0 h-full left-1/2 -translate-x-1/2 flex justify-center items-center">
+						{nav}
+					</div>
+				</nav>
+				<main className=" h-[calc(100%-80px)] overflow-hidden">
+					{children}
+				</main>
+			</div>
+		</ThemeProvider>
 	);
 }

@@ -1,15 +1,17 @@
-import { DialogContent} from "@/components/ui/Dialog";
-import CreateApp from "../../new/page";
+import { DialogContent } from "@/components/ui/Dialog";
 import { BackableDialog } from "./BackableDialog";
+import { CreateAppFrom } from "../../new/CreateAppForm";
 
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic";
 
 export default function InterceptingCreateApp() {
-    console.log('aaaaaaaâddaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
-    
-    return <BackableDialog>
-        <DialogContent>
-            <CreateApp />
-        </DialogContent>
-    </BackableDialog>
+	return (
+		<BackableDialog>
+			<DialogContent>
+				<div className="h-full flex justify-center items-center">
+					<CreateAppFrom></CreateAppFrom>
+				</div>
+			</DialogContent>
+		</BackableDialog>
+	);
 }
