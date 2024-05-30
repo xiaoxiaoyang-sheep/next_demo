@@ -12,7 +12,7 @@ export function FileItem({
 }) {
 	return isImage ? (
 		<img
-			className=" max-h-[13.9rem] max-w-[13.9rem]"
+			className=""
 			src={url}
 			alt={name}
 			draggable={false}

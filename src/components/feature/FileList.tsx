@@ -166,11 +166,11 @@ export function FileList({
 	};
 
 	return (
-		<ScrollArea className=" h-full">
+		<ScrollArea className=" h-full @container container">
 			{isPending && <div className=" text-center">Loading</div>}
 			<div
 				className={cn(
-					"flex flex-wrap justify-center gap-4 relative container"
+					" grid grid-cols-1 @md:grid-cols-2 @lg:grid-cols-3 @2xl:grid-cols-4 gap-4 @3xl:grid-cols-5 gap-4relative container"
 				)}
 			>
 				{uploadingFileIDs.length > 0 &&
@@ -191,7 +191,7 @@ export function FileList({
 					return (
 						<div
 							key={file.id}
-							className=" w-56 h-56 flex justify-center items-center border relative"
+							className="flex justify-center items-center border relative overflow-hidden"
 						>
 							<div className=" absolute inset-0 opacity-0 hover:opacity-100 transition-all bg-background/30 justify-center items-center flex">
 								<CopyUrl url={file.url}></CopyUrl>
