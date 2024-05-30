@@ -23,7 +23,7 @@ export default async function RootLayout({
 	}
 
 	return (
-		<div className=" h-screen">
+		<div className=" h-full">
 			<nav className=" h-[80px]  border-b w-full sticky top-0 z-50 bg-white">
 				<div className=" container flex justify-end items-center h-full">
 					<DropdownMenu>
@@ -48,7 +48,7 @@ export default async function RootLayout({
 					{nav}
 				</div>
 			</nav>
-			<main className=" h-[calc(100%-80px)]">{children}</main>
+			<main className=" h-[calc(100%-80px)] overflow-hidden">{children}</main>
 		</div>
 	);
 }

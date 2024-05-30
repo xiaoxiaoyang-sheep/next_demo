@@ -2,7 +2,7 @@ import { type HTMLAttributes } from "preact/compat";
 import { MutableRef, useRef } from "preact/hooks";
 
 interface CommonPreactComponentProps {
-	setChildrenContainer: (ele: HTMLElement | null) => void;
+	setChildrenContainer?: (ele: HTMLElement | null) => void;
 }
 
 export type UploadButtonProps =  HTMLAttributes<HTMLButtonElement> &
@@ -35,7 +35,7 @@ export function UploadButton({
 			<button
 				{...props}
 				onClick={handleClick}
-				ref={(e) => setChildrenContainer(e)}
+				ref={(e) => setChildrenContainer?.(e)}
 			>
 				{children}
 			</button>

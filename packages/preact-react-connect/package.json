@@ -1,0 +1,24 @@
+{
+    "name": "@image-saas/preact-react-connect",
+    "main": "dist/index.jsx",
+    "version": "0.0.1",
+    "type": "module",
+    "files": [
+        "dist",
+        "package.json"
+    ],
+    "author": "Yanko",
+    "scripts": {
+        "build": "tsc"
+    },
+    "devDependencies": {
+        "preact": "^10.19.6",
+        "react": "^18.2.0",
+        "@types/react": "^18.2.66"
+    },
+    "peerDependencies": {
+        "preact": "^10.19.6",
+        "react": "^18.2.0",
+        "@types/react": "^18.2.66"
+    }
+}

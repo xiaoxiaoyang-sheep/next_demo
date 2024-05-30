@@ -4,4 +4,8 @@ packages:
   - packages/dropzone
   - packages/uploader
   - packages/preact-vue-connect
+  - packages/preact-react-connect
   - examples/nuxt
+  - examples/sevlet
+  - examples/react
+
