@@ -34,8 +34,8 @@ export default function StoragePage({
 		<div className=" container pt-10 pb-10 relative flex flex-col">
 			<div className=" flex justify-between items-center">
 				<h1 className=" text-3xl mb-6">Storage</h1>
-				<Button>
-					<Link href={`/dashboard/apps/${id}/storage/new`}><Plus /></Link>
+				<Button asChild>
+					<Link  href={`/dashboard/apps/${id}/setting/storage/new`}><Plus /></Link>
 				</Button>
 			</div>
 			

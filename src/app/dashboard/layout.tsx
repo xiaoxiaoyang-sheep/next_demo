@@ -27,7 +27,7 @@ export default async function RootLayout({
 	return (
 		<ThemeProvider>
 			<div className=" h-full">
-				<nav className=" h-[80px]  border-b w-full sticky top-0 z-50 bg-[var(--background)]">
+				<nav className=" h-[80px]  border-b w-full sticky top-0 z-50 bg-[hsl(var(--background))]">
 					<div className=" container flex justify-end items-center h-full gap-2">
 						<ThemeTroggle></ThemeTroggle>
 						<DropdownMenu>
@@ -48,7 +48,7 @@ export default async function RootLayout({
 							</DropdownMenuContent>
 						</DropdownMenu>
 					</div>
-					<div className=" absolute top-0 h-full left-1/2 -translate-x-1/2 flex justify-center items-center">
+					<div className=" absolute top-0 h-full container left-0 flex  items-center">
 						{nav}
 					</div>
 				</nav>

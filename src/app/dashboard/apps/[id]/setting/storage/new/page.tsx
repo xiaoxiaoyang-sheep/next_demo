@@ -70,6 +70,7 @@ export default function NewStoragePage({params: {id}}: {params: {id: string}}) {
 						{...register("secretAccessKey", {
 							required: "SecretAccessKey is required",
 						})}
+						autoComplete="off"
 					></Input>
                      <span className=" text-red-500">{errors.secretAccessKey?.message}</span>
 				</div>
