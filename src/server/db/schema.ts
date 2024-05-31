@@ -10,6 +10,7 @@ import {
 	index,
 	serial,
 	json,
+	boolean,
 } from "drizzle-orm/pg-core";
 import postgres from "postgres";
 import { drizzle } from "drizzle-orm/postgres-js";
@@ -158,6 +159,7 @@ export const apiKeys = pgTable("apiKeys", {
 	clientId: varchar("client_id", {length: 100}).notNull().unique(),
 	key: varchar("key", { length: 100 }).notNull().unique(),
 	appId: uuid("app_id").notNull(),
+	havenShown: boolean("haven_shown").notNull().default(false),
 	createdAt: timestamp("created_at", { mode: "date" }).defaultNow(),
 	deletedAt: timestamp("deleted_at", { mode: "date" }),
 });

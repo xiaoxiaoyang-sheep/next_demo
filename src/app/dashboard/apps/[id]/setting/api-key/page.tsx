@@ -1,5 +1,11 @@
 "use client";
 
+import {
+	Accordion,
+	AccordionContent,
+	AccordionItem,
+	AccordionTrigger,
+} from "@/components/ui/Accordion";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import {
@@ -9,9 +15,12 @@ import {
 } from "@/components/ui/Popover";
 import { ScrollArea } from "@/components/ui/ScrollArea";
 import { trpcClientReact } from "@/utils/api";
-import { Plus } from "lucide-react";
+import copy from "copy-to-clipboard";
+import { Copy, Plus } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { toast } from "sonner";
+import { SecretKey } from "./SecretKey";
 
 export default function ApiKeyPage({
 	params: { id },
@@ -74,18 +83,39 @@ export default function ApiKeyPage({
 						</PopoverContent>
 					</Popover>
 				</div>
-
-				{apiKeys?.map((apiKey) => {
-					return (
-						<div
-							key={apiKey.id}
-							className=" border p-4 flex justify-between items-center"
-						>
-							<span>{apiKey.name}</span>
-							<span>{apiKey.key}</span>
-						</div>
-					);
-				})}
+				<Accordion collapsible type="single">
+					{apiKeys?.map((apiKey) => {
+						return (
+							<AccordionItem
+								key={apiKey.id}
+								value={apiKey.id.toString()}
+							>
+								<AccordionTrigger className=" text-lg hover:no-underline">
+									{apiKey.name}
+								</AccordionTrigger>
+								<AccordionContent>
+									<div className=" flex justify-between w-full items-center">
+										<span>Client Id</span>
+										<div className=" flex items-center">
+											<span>{apiKey.clientId}</span>
+											<Button
+												variant="ghost"
+												size="icon"
+												onClick={() => {
+													copy(apiKey.clientId);
+													toast("client id copied!");
+												}}
+											>
+												<Copy size={20} />
+											</Button>
+										</div>
+									</div>
+									<SecretKey id={apiKey.id} havenShown={apiKey.havenShown}></SecretKey>
+								</AccordionContent>
+							</AccordionItem>
+						);
+					})}
+				</Accordion>
 			</div>
 		</ScrollArea>
 	);
