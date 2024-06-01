@@ -19,11 +19,13 @@ export function FileList({
 	orderBy,
 	showDeleted,
 	appId,
+	onMakeUrl,
 }: {
 	uppy: Uppy;
 	showDeleted: boolean;
 	orderBy: FilesOrderByColumn;
 	appId: string;
+	onMakeUrl: (id: string) => void;
 }) {
 	const queryKey = {
 		limit: 10,
@@ -66,7 +68,7 @@ export function FileList({
 							file.data instanceof File ? file.data.name : "test",
 						path: resp.uploadURL ?? "",
 						type: file.data.type,
-                        appId
+						appId,
 					})
 					.then((resp) => {
 						utils.file.infinityQueryFiles.setInfiniteData(
@@ -179,11 +181,13 @@ export function FileList({
 						return (
 							<div
 								key={file.id}
-								className="w-56 h-56 flex justify-center items-center border border-red-500"
+								className="pt-[100%] flex justify-center items-center relative border overflow-hidden border-red-500"
 							>
-								<LocalFileItem
-									file={file.data as File}
-								></LocalFileItem>
+								<div className="absolute top-1/2 -translate-y-1/2">
+									<LocalFileItem
+										file={file.data as File}
+									></LocalFileItem>
+								</div>
 							</div>
 						);
 					})}
@@ -191,21 +195,25 @@ export function FileList({
 					return (
 						<div
 							key={file.id}
-							className="flex justify-center items-center border relative overflow-hidden"
+							className=" pt-[100%] flex justify-center items-center border relative overflow-hidden"
 						>
+							<div className=" absolute top-1/2 -translate-y-1/2">
+								<RemoteFileItem
+									contentType={file.contentType}
+									id={file.id}
+									name={file.name}
+								></RemoteFileItem>
+							</div>
 							<div className=" absolute inset-0 opacity-0 hover:opacity-100 transition-all bg-background/30 justify-center items-center flex">
-								<CopyUrl url={file.url}></CopyUrl>
+								<CopyUrl
+									url={file.url}
+									onClick={() => onMakeUrl(file.id)}
+								></CopyUrl>
 								<DeleteFile
 									fileId={file.id}
 									onDeleteSuccess={handleFileDelete}
 								></DeleteFile>
 							</div>
-
-							<RemoteFileItem
-								contentType={file.contentType}
-								id={file.id}
-								name={file.name}
-							></RemoteFileItem>
 						</div>
 					);
 				})}

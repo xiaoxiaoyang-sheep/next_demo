@@ -19,7 +19,7 @@ export default function RootLayout({
 	return (
 		<html lang="en" suppressHydrationWarning={true}>
 			<body className={inter.className} suppressHydrationWarning={true}>
-        <Toaster></Toaster>
+				<Toaster></Toaster>
 				<TrpcProvider>{children}</TrpcProvider>
 			</body>
 		</html>
