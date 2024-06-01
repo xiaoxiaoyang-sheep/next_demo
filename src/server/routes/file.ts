@@ -11,7 +11,7 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { v4 as uuid } from "uuid";
 import { db } from "../db/db";
 import { apps, files } from "../db/schema";
-import { desc, sql, asc, eq, isNull, and } from "drizzle-orm";
+import { desc, sql, asc, eq, isNull, and, count } from "drizzle-orm";
 import { serverCaller } from "../router";
 import { escape } from "querystring";
 import { filesCanOrderByColumns } from "../db/validate-schema";
@@ -45,7 +45,8 @@ export const fileRoutes = router({
 			const isoString = date.toISOString();
 			const dateString = isoString.split("T")[0];
 
-			if(!ctx.app && !input.appId) {
+
+			if (!ctx.app && !input.appId) {
 				throw new TRPCError({
 					code: "BAD_REQUEST",
 				});
@@ -58,8 +59,9 @@ export const fileRoutes = router({
 				  })
 				: ctx.app;
 
-           const {user} = ctx
+			const { user } = ctx;
 
+			const isFreePlan = user.plan === "free";
 
 			if (!app || !app.storage) {
 				throw new TRPCError({
@@ -70,6 +72,23 @@ export const fileRoutes = router({
 			if (app.userId !== user.id) {
 				throw new TRPCError({
 					code: "FORBIDDEN",
+				});
+			}
+
+			const alreadyUploadedFilesCountRestul = await db
+				.select({ count: count() })
+				.from(files)
+				.where(and(eq(files.appId, app.id), isNull(files.deletedAt)));
+
+			const countNum = alreadyUploadedFilesCountRestul[0].count;
+
+			console.log(countNum);
+			
+
+			if (countNum >= 45) {
+				throw new TRPCError({
+					code: "FORBIDDEN",
+					message: "You have uploaded too many files",
 				});
 			}
 
@@ -150,12 +169,11 @@ export const fileRoutes = router({
 			const { user, app } = ctx;
 			const url = new URL(input.path);
 
-			if(!app && !input.appId) {
+			if (!app && !input.appId) {
 				throw new TRPCError({
 					code: "BAD_REQUEST",
 				});
 			}
-
 
 			const photo = await db
 				.insert(files)
@@ -183,8 +201,7 @@ export const fileRoutes = router({
 			})
 		)
 		.query(async ({ ctx, input }) => {
-
-			if(!ctx.app && !input.appId) {
+			if (!ctx.app && !input.appId) {
 				throw new TRPCError({
 					code: "BAD_REQUEST",
 				});
@@ -229,7 +246,7 @@ export const fileRoutes = router({
 				appId,
 			} = input;
 
-			if(!ctx.app && !input.appId) {
+			if (!ctx.app && !input.appId) {
 				throw new TRPCError({
 					code: "BAD_REQUEST",
 				});

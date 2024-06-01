@@ -37,9 +37,18 @@ export const protectedProcedure = withLoggerProcedure
 				code: "FORBIDDEN",
 			});
 		}
+
+		const user = await db.query.users.findFirst({
+			where: (users, {eq}) => eq(users.id, ctx.session!.user.id),
+			columns: {
+				plan: true
+			}
+		})
+
 		return next({
 			ctx: {
 				session: ctx.session!,
+				plan: user!.plan
 			},
 		});
 	});
@@ -118,9 +127,12 @@ export const withAppProcedure = withLoggerProcedure
 				},
 			});
 		} else if (ctx.session?.user) {
+			const user = await db.query.users.findFirst({
+				where: (users, {eq}) => eq(users.id, ctx.session!.user.id),
+			})
             return next({
                 ctx: {
-                    user: ctx.session.user
+                    user
                 }
             })
         }

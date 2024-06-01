@@ -27,7 +27,9 @@ export function FileList({
 	appId: string;
 	onMakeUrl: (id: string) => void;
 }) {
-	const queryKey = {
+	const queryKey = useRef<Record<string, any>>({});
+	queryKey.current = {
+		...queryKey.current,
 		limit: 10,
 		showDeleted,
 		orderBy,
@@ -39,14 +41,21 @@ export function FileList({
 		isPending,
 		fetchNextPage,
 	} = trpcClientReact.file.infinityQueryFiles.useInfiniteQuery(
-		{ ...queryKey },
+		{ ...queryKey.current },
 		{
-			getNextPageParam: (resp) => resp.nextCursor,
+			getNextPageParam: (resp) => {
+				queryKey.current = {
+					...queryKey.current,
+					cursor: resp.nextCursor,
+				};
+				return resp.nextCursor;
+			},
 			refetchOnMount: false,
 			refetchOnWindowFocus: false,
 			refetchOnReconnect: false,
 		}
 	);
+	console.log(infinityQueryData);
 
 	const fileList = infinityQueryData
 		? infinityQueryData.pages.reduce((result, page) => {
@@ -72,7 +81,7 @@ export function FileList({
 					})
 					.then((resp) => {
 						utils.file.infinityQueryFiles.setInfiniteData(
-							{ ...queryKey },
+							{ ...queryKey.current },
 							(prev) => {
 								if (!prev) {
 									return prev;
@@ -147,7 +156,7 @@ export function FileList({
 
 	const handleFileDelete = (id: string) => {
 		utils.file.infinityQueryFiles.setInfiniteData(
-			{ ...queryKey },
+			{ ...queryKey.current },
 			(prev) => {
 				if (!prev) {
 					return prev;

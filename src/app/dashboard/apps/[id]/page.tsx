@@ -17,24 +17,36 @@ import { Label } from "@/components/ui/Label";
 import Link from "next/link";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/Dialog";
 import { UrlMaker } from "./UrlMaker";
+import { UpgradeDialog } from "./UpgradeDialog";
 
 export default function AppPage({
 	params: { id: appId },
 }: {
 	params: { id: string };
 }) {
+	const [showUpgrad, setShowUpgrade] = useState(false);
+
 	const [uppy] = useState(() => {
 		const uppy = new Uppy();
 		uppy.use(AWSS3, {
 			shouldUseMultipart: false,
-			getUploadParameters(file) {
-				return trpcPureClient.file.createPresignedUrl.mutate({
-					filename:
-						file.data instanceof File ? file.data.name : "test",
-					contentType: file.data.type || "",
-					size: file.size,
-					appId: appId,
-				});
+			async getUploadParameters(file) {
+				try {
+					const result =
+						await trpcPureClient.file.createPresignedUrl.mutate({
+							filename:
+								file.data instanceof File
+									? file.data.name
+									: "test",
+							contentType: file.data.type || "",
+							size: file.size,
+							appId: appId,
+						});
+					return result;
+				} catch (err) {
+					setShowUpgrade(true);
+					throw err;
+				}
 			},
 		});
 		return uppy;
@@ -117,6 +129,7 @@ export default function AppPage({
 						</Button>
 						<Switch
 							id="show_deleted"
+							checked={showDeleted}
 							onCheckedChange={(checked) =>
 								setShowDeleted(checked)
 							}
@@ -169,11 +182,15 @@ export default function AppPage({
 				>
 					<DialogContent className="max-w-4xl">
 						<DialogTitle>Make Url</DialogTitle>
-						{
-							makingUrlImageId && <UrlMaker id={makingUrlImageId}></UrlMaker>
-						}
+						{makingUrlImageId && (
+							<UrlMaker id={makingUrlImageId}></UrlMaker>
+						)}
 					</DialogContent>
 				</Dialog>
+				<UpgradeDialog
+					open={showUpgrad}
+					onOpenChange={(f) => setShowUpgrade(f)}
+				></UpgradeDialog>
 			</div>
 		);
 	}
