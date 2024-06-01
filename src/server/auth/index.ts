@@ -1,6 +1,7 @@
 import {
 	AuthOptions,
 	DefaultSession,
+	DefaultUser,
 	getServerSession as nextAuthGetServerSession,
 } from "next-auth";
 import GithubProvider from "next-auth/providers/github";
@@ -9,11 +10,18 @@ import { db } from "@/server/db/db";
 import { Adapter } from "next-auth/adapters";
 
 declare module "next-auth" {
+	type Plan = "free" | "payed";
+
     interface Session extends DefaultSession {
         user: {
             id: string;
+			plan: Plan;
         } & DefaultSession["user"];
     }
+
+	interface User extends DefaultUser {
+		plan: Plan
+	}
 }
 
 export const authOptions: AuthOptions = {
@@ -22,6 +30,7 @@ export const authOptions: AuthOptions = {
 		async session({ session, user }) {
 			if (session.user && user) {
 				session.user.id = user.id;
+				session.user.plan = user.plan
 			}
 			return session;
 		},

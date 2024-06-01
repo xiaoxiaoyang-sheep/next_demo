@@ -10,6 +10,7 @@ import { getServerSession } from "@/server/auth";
 import { redirect } from "next/navigation";
 import { ThemeProvider } from "./ThemeProvider";
 import { ThemeTroggle } from "./ThemeToggle";
+import { Plan } from "./Plan";
 
 export default async function RootLayout({
 	children,
@@ -28,10 +29,10 @@ export default async function RootLayout({
 		<ThemeProvider>
 			<div className=" h-full">
 				<nav className=" h-[80px] container border-b w-full sticky top-0 z-50 bg-[hsl(var(--background))]">
-					<div className=" flex justify-end items-center h-full gap-2">
+					<div className=" flex justify-end items-center h-full gap-2 relative">
 						<ThemeTroggle></ThemeTroggle>
 						<DropdownMenu>
-							<DropdownMenuTrigger>
+							<DropdownMenuTrigger className=" relative">
 								<Avatar>
 									<AvatarImage
 										src={session.user.image!}
@@ -40,6 +41,7 @@ export default async function RootLayout({
 										{session.user.name?.substring(0, 2)}
 									</AvatarFallback>
 								</Avatar>
+								<Plan></Plan>
 							</DropdownMenuTrigger>
 							<DropdownMenuContent>
 								<DropdownMenuLabel>

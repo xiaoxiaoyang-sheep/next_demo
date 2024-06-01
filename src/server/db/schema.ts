@@ -24,6 +24,7 @@ export const users = pgTable("user", {
 	name: text("name"),
 	email: text("email").notNull(),
 	emailVerified: timestamp("emailVerified", { mode: "date" }),
+	plan: text("plan", { enum: ["free", "payed"] }),
 	image: text("image"),
 	createdAt: date("created_at").defaultNow(),
 });
@@ -156,7 +157,7 @@ export const storageConfigurationRelations = relations(
 export const apiKeys = pgTable("apiKeys", {
 	id: serial("id").primaryKey(),
 	name: varchar("name", { length: 255 }).notNull(),
-	clientId: varchar("client_id", {length: 100}).notNull().unique(),
+	clientId: varchar("client_id", { length: 100 }).notNull().unique(),
 	key: varchar("key", { length: 100 }).notNull().unique(),
 	appId: uuid("app_id").notNull(),
 	havenShown: boolean("haven_shown").notNull().default(false),
