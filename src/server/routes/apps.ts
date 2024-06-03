@@ -26,7 +26,7 @@ export const appsRouters = router({
 						)
 					);
 				const appCount = appCountResult[0].count;
-				if (appCount >= 0) {
+				if (appCount >= 1) {
 					throw new TRPCError({
 						code: "FORBIDDEN",
 					});
