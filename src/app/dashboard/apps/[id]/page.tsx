@@ -17,7 +17,7 @@ import { Label } from "@/components/ui/Label";
 import Link from "next/link";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/Dialog";
 import { UrlMaker } from "./UrlMaker";
-import { UpgradeDialog } from "./UpgradeDialog";
+import { UpgradeDialog } from "@/components/feature/UpgradeDialog";
 
 export default function AppPage({
 	params: { id: appId },
@@ -64,6 +64,14 @@ export default function AppPage({
 			refetchOnWindowFocus: false,
 		}
 	);
+
+	const { data: plan } = trpcClientReact.user.getPlan.useQuery(void 0, {
+		retry: false,
+		refetchOnMount: false,
+		refetchOnReconnect: false,
+		refetchOnWindowFocus: false,
+	});
+
 	const currentApp = apps?.filter((app) => app.id === appId)[0];
 
 	const [makingUrlImageId, setMakingUrlImageId] = useState<string | null>(
@@ -138,7 +146,15 @@ export default function AppPage({
 					</div>
 					<div className="flex justify-center gap-2">
 						<UploadButton uppy={uppy}></UploadButton>
-						<Button asChild>
+						<Button
+							asChild
+							onClick={(e) => {
+								if (plan === "free") {
+									e.preventDefault()
+									setShowUpgrade(true);
+								}
+							}}
+						>
 							<Link href="./new">new app</Link>
 						</Button>
 						<Button asChild>

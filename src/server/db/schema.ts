@@ -168,3 +168,14 @@ export const apiKeys = pgTable("apiKeys", {
 export const apiKeysRelations = relations(apiKeys, ({ one }) => ({
 	app: one(apps, { fields: [apiKeys.appId], references: [apps.id] }),
 }));
+
+export const orders = pgTable("orders", {
+	sessionId: varchar("sessionId", { length: 255 }).primaryKey(),
+	status: varchar("status", { enum: ["created", "deleted", "completed"] }).notNull(),
+	createdAt: timestamp("created_at", { mode: "date" }).defaultNow(),
+	userId: text("user_id").notNull(),
+});
+
+export const ordersRelation = relations(orders, ({ one }) => ({
+	user: one(users, { fields: [orders.userId], references: [users.id] }),
+}));

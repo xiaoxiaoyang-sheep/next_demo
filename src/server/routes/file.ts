@@ -45,7 +45,6 @@ export const fileRoutes = router({
 			const isoString = date.toISOString();
 			const dateString = isoString.split("T")[0];
 
-
 			if (!ctx.app && !input.appId) {
 				throw new TRPCError({
 					code: "BAD_REQUEST",
@@ -75,21 +74,22 @@ export const fileRoutes = router({
 				});
 			}
 
-			const alreadyUploadedFilesCountRestul = await db
-				.select({ count: count() })
-				.from(files)
-				.where(and(eq(files.appId, app.id), isNull(files.deletedAt)));
+			if (isFreePlan) {
+				const alreadyUploadedFilesCountRestul = await db
+					.select({ count: count() })
+					.from(files)
+					.where(
+						and(eq(files.appId, app.id), isNull(files.deletedAt))
+					);
 
-			const countNum = alreadyUploadedFilesCountRestul[0].count;
+				const countNum = alreadyUploadedFilesCountRestul[0].count;
 
-			console.log(countNum);
-			
-
-			if (countNum >= 45) {
-				throw new TRPCError({
-					code: "FORBIDDEN",
-					message: "You have uploaded too many files",
-				});
+				if (countNum >= 45) {
+					throw new TRPCError({
+						code: "FORBIDDEN",
+						message: "You have uploaded too many files",
+					});
+				}
 			}
 
 			const storage = app.storage;
