@@ -76,7 +76,7 @@ export default function UpgradePage() {
 												Current
 											</Button>
 										) : (
-											<text className=" text-xs text-center w-full text-gray-500">You're already a pro user</text>
+											<text className=" text-xs text-center w-full text-gray-500">You&apos;re already a pro user</text>
 										)}
 									</div>
 								</div>
