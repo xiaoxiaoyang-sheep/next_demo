@@ -4,9 +4,11 @@ import { Textarea } from "@/components/ui/Textarea";
 import { getServerSession } from "@/server/auth";
 import { createAppSchema } from "@/server/db/validate-schema";
 import { serverCaller } from "@/server/router";
-import { trpcClient, trpcClientReact } from "@/utils/api";
+import { isTRPCError, trpcClient, trpcClientReact } from "@/utils/api";
 import { redirect } from "next/navigation";
 import { SubmitButton } from "./SubmitButton";
+import { TRPCClientError } from "@trpc/client";
+import { TRPCError } from "@trpc/server";
 
 export function CreateAppFrom() {
 	async function createApp(formData: FormData) {
@@ -24,10 +26,18 @@ export function CreateAppFrom() {
 
 		if (input.success) {
 			const session = getServerSession();
-			const newApp = await serverCaller({ session }).apps.createApp(
-				input.data
-			);
-			redirect(`/dashboard/apps/${newApp.id}`);
+			try {
+				const newApp = await serverCaller({ session }).apps.createApp(
+					input.data
+				);
+				redirect(`/dashboard/apps/${newApp.id}`);
+			} catch (err: any) {
+				if (isTRPCError(err)) {
+					err.message ==
+						"free user A maximum of one user can be created";
+						redirect(`/dashboard/apps/upgrade`);
+				}
+			}
 		} else {
 			throw input.error;
 		}

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/Button";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
+	DropdownMenuItem,
 	DropdownMenuLabel,
 	DropdownMenuTrigger,
 } from "@/components/ui/DropdownMenu";
@@ -47,6 +48,10 @@ export default async function RootLayout({
 								<DropdownMenuLabel>
 									{session.user.name}
 								</DropdownMenuLabel>
+								<DropdownMenuItem className=" justify-center">
+									Log out
+
+								</DropdownMenuItem>
 							</DropdownMenuContent>
 						</DropdownMenu>
 					</div>
@@ -54,7 +59,7 @@ export default async function RootLayout({
 						{nav}
 					</div>
 				</nav>
-				<main className=" h-[calc(100%-80px)] overflow-hidden">
+				<main className=" relative h-[calc(100%-80px)] min-h-[calc(100vh-80px)] overflow-hidden">
 					{children}
 				</main>
 			</div>

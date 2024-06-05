@@ -4,6 +4,7 @@ import { NextRequest } from "next/server";
 
 
 const handler = (request: NextRequest) => {
+	
 	return fetchRequestHandler({
 		endpoint: "/api/trpc",
 		req: request,
@@ -11,5 +12,7 @@ const handler = (request: NextRequest) => {
 		createContext: () => ({}),
 	});
 };
+
+
 
 export { handler as GET, handler as POST };

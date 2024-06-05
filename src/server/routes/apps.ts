@@ -29,6 +29,7 @@ export const appsRouters = router({
 				if (appCount >= 1) {
 					throw new TRPCError({
 						code: "FORBIDDEN",
+						message: "free user A maximum of one user can be created"
 					});
 				}
 			}

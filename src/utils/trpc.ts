@@ -1,4 +1,5 @@
 import { getServerSession } from "@/server/auth";
+import { TRPCClientError } from "@trpc/client";
 import { TRPCError, initTRPC } from "@trpc/server";
 import { createCallerFactory } from "@trpc/server/unstable-core-do-not-import";
 import next from "next";
@@ -50,3 +51,4 @@ export const testRouter = router({
 export type TestRouter = typeof testRouter;
 
 export const serverCaller = createCallerFactory()(testRouter);
+

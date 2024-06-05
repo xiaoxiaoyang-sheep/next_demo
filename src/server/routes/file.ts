@@ -64,7 +64,7 @@ export const fileRoutes = router({
 
 			if (!app || !app.storage) {
 				throw new TRPCError({
-					code: "BAD_REQUEST",
+					code: "NOT_FOUND",
 				});
 			}
 
@@ -86,7 +86,7 @@ export const fileRoutes = router({
 
 				if (countNum >= 45) {
 					throw new TRPCError({
-						code: "FORBIDDEN",
+						code: "CLIENT_CLOSED_REQUEST",
 						message: "You have uploaded too many files",
 					});
 				}

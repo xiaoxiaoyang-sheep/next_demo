@@ -18,6 +18,14 @@ import Link from "next/link";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/Dialog";
 import { UrlMaker } from "./UrlMaker";
 import { UpgradeDialog } from "@/components/feature/UpgradeDialog";
+import { TRPCClientError } from "@trpc/client";
+import { WithoutStorageDialog } from "@/components/feature/WithoutStorageDialog";
+import { isTRPCClientError } from "@/utils/api";
+import { useRouter } from "next/navigation";
+
+export async function generateStaticParams() {
+	return [{id: "e304aec7-9ec9-4b97-b9ae-59568b7fb27c"}]
+}
 
 export default function AppPage({
 	params: { id: appId },
@@ -25,6 +33,7 @@ export default function AppPage({
 	params: { id: string };
 }) {
 	const [showUpgrad, setShowUpgrade] = useState(false);
+	const [showWithoutStorage, setShowWithoutStorage] = useState(false);
 
 	const [uppy] = useState(() => {
 		const uppy = new Uppy();
@@ -44,7 +53,18 @@ export default function AppPage({
 						});
 					return result;
 				} catch (err) {
-					setShowUpgrade(true);
+					if (
+						isTRPCClientError(err) &&
+						err?.data?.code === "NOT_FOUND"
+					) {
+						setShowWithoutStorage(true);
+					}
+					if (
+						err instanceof TRPCClientError &&
+						err.data.code === "CLIENT_CLOSED_REQUEST"
+					) {
+						setShowUpgrade(true);
+					}
 					throw err;
 				}
 			},
@@ -104,7 +124,10 @@ export default function AppPage({
 							variant="link"
 							className=" w-full"
 						>
-							<Link href={`/dashboard/apps/${app.id}`}>
+							<Link
+								href={`/dashboard/apps/${app.id}`}
+								prefetch={true}
+							>
 								{app.name}
 							</Link>
 						</Button>
@@ -149,8 +172,8 @@ export default function AppPage({
 						<Button
 							asChild
 							onClick={(e) => {
-								if (plan === "free") {
-									e.preventDefault()
+								if (apps.length === 1 && plan === "free") {
+									e.preventDefault();
 									setShowUpgrade(true);
 								}
 							}}
@@ -207,6 +230,11 @@ export default function AppPage({
 					open={showUpgrad}
 					onOpenChange={(f) => setShowUpgrade(f)}
 				></UpgradeDialog>
+				<WithoutStorageDialog
+					open={showWithoutStorage}
+					id={appId}
+					onOpenChange={(f) => setShowWithoutStorage(f)}
+				></WithoutStorageDialog>
 			</div>
 		);
 	}

@@ -57,7 +57,7 @@ export default function DashboardAppList() {
 							href="/dashboard/apps/new"
 							onClick={(e) => {
 								e.preventDefault();
-								if (plan === "free") {
+								if (plan === "free" && apps?.length === 1) {
 									e.preventDefault();
 									setShowUpgrade(true);
 								}

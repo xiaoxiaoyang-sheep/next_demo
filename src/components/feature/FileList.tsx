@@ -1,7 +1,11 @@
 import { useUppyState } from "@/app/dashboard/useUppyState";
 import { cn } from "@/lib/utils";
 import { trpcClientReact, trpcPureClient } from "@/utils/api";
-import Uppy, { UploadCallback, UploadSuccessCallback } from "@uppy/core";
+import Uppy, {
+	UploadCallback,
+	UploadErrorCallback,
+	UploadSuccessCallback,
+} from "@uppy/core";
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { LocalFileItem, RemoteFileItem } from "./FileItem";
@@ -112,6 +116,15 @@ export function FileList({
 			]);
 		};
 
+		const uploadErrorHandler: UploadErrorCallback<{}> = (data) => {
+			if (data) {
+				uppy.removeFile(data.id);
+				setUploadingFileIDs((currentFiles) =>
+					currentFiles.filter((f) => f !== data.id)
+				);
+			}
+		};
+
 		const completeHandler = () => {
 			setUploadingFileIDs([]);
 		};
@@ -119,11 +132,13 @@ export function FileList({
 		uppy.on("upload-success", handler);
 		uppy.on("upload", uploadProgressHandler);
 		uppy.on("complete", completeHandler);
+		uppy.on("upload-error", uploadErrorHandler);
 
 		return () => {
 			uppy.off("upload-success", handler);
 			uppy.off("upload", uploadProgressHandler);
 			uppy.off("complete", completeHandler);
+			uppy.off("upload-error", uploadErrorHandler);
 		};
 	}, [uppy, utils]);
 
@@ -185,6 +200,7 @@ export function FileList({
 				)}
 			>
 				{uploadingFileIDs.length > 0 &&
+					uploadingFileIDs.length === Object.keys(uppyFiles).length &&
 					uploadingFileIDs.map((id) => {
 						const file = uppyFiles[id];
 						return (
